@@ -61,7 +61,8 @@ async def get_spf_record(domain):
         for record in result:
             if "v=spf1" in record.to_text():
                 logging.info(f"SPF record found for {domain}: {record.to_text()}")
-                return {"spf_record": record.to_text(), "parsed_record": parse_spf(record.to_text())}
+                return {"parsed_record": parse_spf(record.to_text()), "spf_record": record.to_text()}
+
 
         logging.warning(f"No SPF record found for domain: {domain}")
         return {"error": "No SPF record found"}
