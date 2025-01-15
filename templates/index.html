@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMARC Checker</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        nav {
+            width: 100%;
+            background-color: #b22222;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-right: 20px;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            max-width: 950px;
+            width: 100%;
+            text-align: center;
+            margin-top: 40px;
+            border-top: 5px solid #b22222;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #b22222;
+        }
+
+        input, select {
+            width: calc(100% - 100px);
+            padding: 12px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-right: 10px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: #b22222;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            background-color: #b22222;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #a11212;
+        }
+
+        .results {
+            margin-top: 25px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .record-card {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            padding: 20px;
+            border-left: 5px solid #b22222;
+        }
+
+        .record-card h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .record-card pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap; /* Enable word wrap */
+            word-wrap: break-word; /* Enable word wrap */
+        }
+    
+        .record-card li {
+            word-wrap: break-word; /* Enable word wrap */
+        }
+
+        .record-error {
+            border-left-color: #e74c3c;
+        }
+
+        .record-success {
+            border-left-color: #2ecc71;
+        }
+
+        .loading {
+            font-size: 1.2rem;
+            color: #b22222;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        button {
+            margin-top: 10px;
+        }
+        
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Record Checker</h1>
+        <div class="input-container">
+            <input type="text" id="domain" placeholder="Enter a domain (e.g., example.com)" />
+            <select id="recordType">
+                <option value="dmarc">DMARC</option>
+                <option value="spf">SPF</option>
+                <option value="dkim">DKIM</option>
+                <option value="dns">DNS</option>
+                <option value="overview">Overview</option>
+            </select>
+            <button onclick="checkRecord()">Check Record</button>
+        </div>
+        <div class="results">
+            <div id="result">Results will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+        async function checkRecord() {
+            const domain = document.getElementById('domain').value.trim();
+            const recordType = document.getElementById('recordType').value;
+            const resultBox = document.getElementById('result');
+
+            if (!domain) {
+                resultBox.innerHTML = "<div class='error'>Please enter a valid domain.</div>";
+                return;
+            }
+
+            const url = recordType === "overview" 
+                ? `/api/overview?domain=${domain}` 
+                : `/api/${recordType}?domain=${domain}`;
+
+            resultBox.innerHTML = "<div class='loading'>Loading data...</div>";
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (recordType === "overview") {
+                        resultBox.innerHTML = renderOverview(data.records);
+                    } else {
+                        resultBox.innerHTML = renderSingleRecord(recordType, data);
+                    }
+                } else {
+                    resultBox.innerHTML = `<div class='error'>Error: ${data.error || "Failed to fetch data"}</div>`;
+                }
+            } catch (error) {
+                resultBox.innerHTML = `<div class='error'>Error: ${error.message}</div>`;
+            }
+        }    
+        
+        
+        function renderRecordCard(record) {
+            const statusClass = record.status === "error" ? "record-error" : "record-success";
+            const parsedDetails = record.parsed_record
+                ? `<div id="details-${record.title}" style="display:none;">
+                       <h4>Parsed Details:</h4>
+                       <ul>
+                           ${Object.entries(record.parsed_record).map(
+                               ([key, value]) => `<li><strong>${key}:</strong> ${value || "No value available"}<br><em>${getExplanation(key, record.title.toLowerCase())}</em></li>`
+                           ).join("")}
+                       </ul>
+                   </div>`
+                : "";
+        
+            return `
+                <div class="record-card ${statusClass}">
+                    <h2>${record.title}</h2>
+                    <p><strong>Status:</strong> ${record.status}</p>
+                    <h4>Raw Data:</h4>
+                    <pre>${JSON.stringify(record.value, null, 2)}</pre>
+                    ${parsedDetails}
+                    <button onclick="toggleDetails('details-${record.title}')">Details</button>
+                </div>
+            `;
+        }
+        
+        function renderSingleRecord(recordType, data) {
+            const record = {
+                title: recordType.toUpperCase(),
+                value: data,
+                parsed_record: data.parsed_record || {}, // Include parsed details if available
+                status: data.error ? "error" : "success",
+            };
+        
+            return renderRecordCard(record);
+        }
+        
+        
+        function renderOverview(records) {
+            if (!records || !Array.isArray(records) || records.length === 0) {
+                return "<div class='error'>No records found for this domain.</div>";
+            }
+        
+            return records.map(record => renderRecordCard(record)).join("");
+        }
+        
+        
+        function renderRecordCard(record) {
+            const statusClass = record.status === "error" ? "record-error" : "record-success";
+            const parsedDetails = record.parsed_record && Object.keys(record.parsed_record).length > 0
+                ? `<div id="details-${record.title}" style="display:none;">
+                       <h4>Parsed Details:</h4>
+                       <ul>
+                           ${Object.entries(record.parsed_record).map(
+                               ([key, value]) => `<li><strong>${key}:</strong> ${value || "No value available"}<br><em>${getExplanation(key, record.title.toLowerCase())}</em></li>`
+                           ).join("")}
+                       </ul>
+                   </div>`
+                : "";
+        
+            return `
+                <div class="record-card ${statusClass}">
+                    <h2>${record.title}</h2>
+                    <p><strong>Status:</strong> ${record.status}</p>
+                    <h4>Raw Data:</h4>
+                    <pre>${JSON.stringify(record.value, null, 2)}</pre>
+                    ${parsedDetails}
+                    <button onclick="toggleDetails('details-${record.title}')">Details</button>
+                </div>
+            `;
+        }
+        
+        
+        function getExplanation(key, recordType) {
+            const explanation = explanations[recordType]?.[key] || "No detailed explanation available for this key.";
+            return `<em>${explanation}</em>`;
+        }
+        
+        
+        const explanations = {
+            dmarc: {
+                "\"v": "Version of the DMARC policy.",
+                "p": "Policy for emails failing DMARC checks (e.g., 'none', 'quarantine', 'reject').",
+                "sp": "Policy for subdomains failing DMARC checks.",
+                "pct": "Percentage of emails to which the DMARC policy is applied.",
+                "rua": "Aggregate report URIs (e.g., email addresses) where feedback is sent.",
+                "ruf": "Forensic report URIs for individual failure events.",
+                "adkim": "Alignment mode for DKIM (strict or relaxed).",
+                "aspf": "Alignment mode for SPF (strict or relaxed).",
+                "fo": "Failure options for DMARC failures.",
+                "rf": "Report format for forensic reports.",
+                "ri": "Interval for aggregate reports in seconds.",
+            },
+            spf: {
+                "\"v": "Version of the SPF policy.",
+                "-all\"": "Defines the default policy (e.g., '-all' for hard fail).",
+                "ip4": "Specifies an IPv4 address range allowed to send emails.",
+                "ip6": "Specifies an IPv6 address range allowed to send emails.",
+                "a": "Allows all A records in the domain to send emails.",
+                "mx": "Allows all MX records in the domain to send emails.",
+                "redirect": "Redirects to another domain for SPF checks.",
+                "include:spf.protection.outlook.com": "Includes another domain for SPF checks.",
+                "include:_spf.google.com": "Includes another domain for SPF checks.",
+                "include:amazonses.com": "Includes another domain for SPF checks.",
+                "~all\"": "Soft fail policy (emails are marked but not rejected).",
+            },
+            dkim: {
+                "\"v": "Version of the DKIM policy.",
+                "k": "Key type used for DKIM signing (e.g., 'rsa').",
+                "p": "Public key used for verifying DKIM signatures.",
+                "s": "Service type (e.g., email).",
+                "t": "Flags indicating testing mode.",
+            },
+            dns: {
+                "A": "IPv4 address records for the domain.",
+                "AAAA": "IPv6 address records for the domain.",
+                "MX": "Mail exchange server records for the domain.",
+                "TXT": "Text records containing metadata for the domain.",
+                "CNAME": "Canonical name records (aliases) for the domain.",
+            },
+        };      
+        
+        
+        function toggleDetails(id) {
+            const detailsElement = document.getElementById(id);
+            if (detailsElement.style.display === "none") {
+                detailsElement.style.display = "block";
+            } else {
+                detailsElement.style.display = "none";
+            }
+        }
+        
+        
+        
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                checkRecord();
+            }
+        });
+        
+    </script>
+</body>
+</html>
