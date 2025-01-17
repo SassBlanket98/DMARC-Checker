@@ -155,7 +155,6 @@
         button {
             margin-top: 10px;
         }
-        
     </style>
 </head>
 <body>
@@ -184,148 +183,304 @@
     </div>
 
     <script>
-        async function checkRecord() {
-            const domain = document.getElementById('domain').value.trim();
-            const recordType = document.getElementById('recordType').value;
-            const resultBox = document.getElementById('result');
+        // 1. Utility/helper functions
+        /**
+        * Retrieves the explanation for a specific key within a given record type.
+        * 
+        * @param {string} key - The specific key for which an explanation is needed (e.g., "v", "p", etc.).
+        * @param {string} recordType - The type of record (e.g., "dmarc", "spf", "dkim", or "dns") the key belongs to.
+        * 
+        * @returns {string} - An HTML string containing the explanation for the key. If no explanation exists for the key
+        *                     or record type, a default message is returned.
+        * 
+        * Example Usage:
+        * getExplanation("p", "dmarc");
+        * // Returns: "<em>Policy for emails failing DMARC checks (e.g., 'none', 'quarantine', 'reject').</em>"
+        */
+        function getExplanation(key, recordType) {
+            // Retrieve the explanation from the predefined `explanations` object.
+            // Use optional chaining to safely access nested properties.
+            // If the key does not exist in the record type, fall back to a default message.
+            const explanation = explanations[recordType]?.[key] || "No detailed explanation available for this key.";
+            
+            // Return the explanation wrapped in an <em> HTML tag for emphasis.
+            return `<em>${explanation}</em>`;
+        }
 
-            if (!domain) {
-                resultBox.innerHTML = "<div class='error'>Please enter a valid domain.</div>";
-                return;
+
+        /**
+        * Toggles the visibility of a specific HTML element by its ID.
+        * 
+        * @param {string} id - The ID of the HTML element whose visibility is to be toggled.
+        * 
+        * Functionality:
+        * - Checks the current `display` style property of the element.
+        * - If the element is hidden (`display: none`), it sets the `display` property to `block` to make it visible.
+        * - If the element is visible, it sets the `display` property to `none` to hide it.
+        * 
+        * Example Usage:
+        * toggleDetails("details-record-1");
+        * // Toggles the visibility of the element with ID "details-record-1".
+        */
+        function toggleDetails(id) {
+            // Find the HTML element with the given ID.
+            const detailsElement = document.getElementById(id);
+
+            // Toggle the element's display style:
+            // - If currently "none", set to "block" (make visible).
+            // - Otherwise, set to "none" (hide the element).
+            detailsElement.style.display = detailsElement.style.display === "none" ? "block" : "none";
+        }
+
+
+        /**
+        * Adds an event listener to the document to handle the 'Enter' key press.
+        * 
+        * Purpose:
+        * - Listens for a `keydown` event on the entire document.
+        * - Checks if the pressed key is the 'Enter' key.
+        * - If the 'Enter' key is pressed, it triggers the `checkRecord` function.
+        * 
+        * Example Usage:
+        * - When the user focuses on an input field and presses 'Enter', the `checkRecord` function is executed.
+        * 
+        * Note:
+        * - Ensure the `checkRecord` function is defined and handles the desired logic when triggered.
+        */
+        document.addEventListener('keydown', function (event) {
+            // Check if the key pressed is 'Enter'.
+            if (event.key === 'Enter') {
+                // Call the `checkRecord` function to handle the action.
+                checkRecord();
+            }
+        });
+
+        // 2. Rendering functions
+        /**
+        * Generates an HTML string to display a record card with its details.
+        * 
+        * @param {Object} record - The record object containing details to be rendered.
+        * @param {string} record.title - The title or name of the record (e.g., "DMARC").
+        * @param {string} record.status - The status of the record, either "success" or "error".
+        * @param {Object} record.value - The raw data of the record to be displayed.
+        * @param {Object} [record.parsed_record] - An optional object containing parsed details of the record.
+        * 
+        * @returns {string} - An HTML string representing a record card with the provided details.
+        * 
+        * Functionality:
+        * - Dynamically determines the CSS class for the record based on its status.
+        * - Optionally includes parsed details, if available, in a collapsible section.
+        * - Includes a "Details" button to toggle the visibility of parsed details.
+        * 
+        * Example Usage:
+        * const record = {
+        *   title: "DMARC",
+        *   status: "success",
+        *   value: { "v": "DMARC1", "p": "none" },
+        *   parsed_record: { "v": "DMARC1", "p": "none" },
+        * };
+        * renderRecordCard(record);
+        * // Returns an HTML string for the record card.
+        */
+        function renderRecordCard(record) {
+            // Determine the CSS class for the card based on the record's status.
+            const statusClass = record.status === "error" ? "record-error" : "record-success";
+
+            // Check if parsed details are available and generate an HTML section for them.
+            const parsedDetails = record.parsed_record && Object.keys(record.parsed_record).length > 0
+                ? `<div id="details-${record.title}" style="display:none;">
+                    <h4>Parsed Details:</h4>
+                    <ul>
+                        ${Object.entries(record.parsed_record).map(
+                            ([key, value]) => 
+                            `<li><strong>${key}:</strong> ${value || "No value available"}<br>
+                                <em>${getExplanation(key, record.title.toLowerCase())}</em></li>`
+                        ).join("")}
+                    </ul>
+                </div>`
+                : "";
+
+            // Generate the HTML string for the record card.
+            return `
+                <div class="record-card ${statusClass}">
+                    <h2>${record.title}</h2>
+                    <p><strong>Status:</strong> ${record.status}</p>
+                    <h4>Raw Data:</h4>
+                    <pre>${JSON.stringify(record.value, null, 2)}</pre>
+                    ${parsedDetails}
+                    <button onclick="toggleDetails('details-${record.title}')">Details</button>
+                </div>
+            `;
+        }
+
+        /**
+        * Generates a single record card for a given record type and its data.
+        * 
+        * @param {string} recordType - The type of record being rendered (e.g., "dmarc", "spf", "dkim", or "dns").
+        * @param {Object} data - The data object containing details for the record.
+        * @param {Object} [data.parsed_record] - An optional object containing parsed details of the record.
+        * @param {boolean} [data.error] - A flag indicating whether there was an error fetching the record data.
+        * 
+        * @returns {string} - An HTML string representing a record card with the provided data.
+        * 
+        * Functionality:
+        * - Constructs a record object using the `recordType` and `data` provided.
+        * - Determines the status of the record based on the presence of an `error` in the data.
+        * - Calls the `renderRecordCard` function to generate an HTML card for the record.
+        * 
+        * Example Usage:
+        * const data = {
+        *   parsed_record: { "v": "DMARC1", "p": "none" },
+        *   error: false,
+        * };
+        * renderSingleRecord("dmarc", data);
+        * // Returns an HTML string for a DMARC record card.
+        */
+        function renderSingleRecord(recordType, data) {
+            // Create a record object with the title, value, parsed details, and status.
+            const record = {
+                title: recordType.toUpperCase(), // Convert the record type to uppercase for display (e.g., "DMARC").
+                value: data, // Use the full data object as the value to display raw details.
+                parsed_record: data.parsed_record || {}, // Include parsed details if available, or an empty object otherwise.
+                status: data.error ? "error" : "success", // Determine the status based on the presence of an error.
+            };
+
+            // Pass the constructed record object to the `renderRecordCard` function to generate the HTML.
+            return renderRecordCard(record);
+        }
+
+        /**
+        * Generates HTML to display an overview of multiple records.
+        * 
+        * @param {Array} records - An array of record objects, each containing details to be displayed.
+        * 
+        * @returns {string} - An HTML string representing a collection of record cards.
+        *                     If no records are provided or the array is empty, returns an error message.
+        * 
+        * Functionality:
+        * - Validates the input to ensure it is a non-empty array of records.
+        * - If no records exist, returns a message indicating no records were found.
+        * - Maps over the array of records, calling `renderRecordCard` for each, and concatenates the results.
+        * 
+        * Example Usage:
+        * const records = [
+        *   { title: "DMARC", status: "success", value: {}, parsed_record: {} },
+        *   { title: "SPF", status: "error", value: {}, parsed_record: {} },
+        * ];
+        * renderOverview(records);
+        * // Returns an HTML string containing cards for DMARC and SPF records.
+        */
+        function renderOverview(records) {
+            // Validate the records input:
+            // - Ensure it is defined.
+            // - Ensure it is an array.
+            // - Ensure the array is not empty.
+            if (!records || !Array.isArray(records) || records.length === 0) {
+                // Return an error message if no valid records are provided.
+                return "<div class='error'>No records found for this domain.</div>";
             }
 
-            const url = recordType === "overview" 
-                ? `/api/overview?domain=${domain}` 
-                : `/api/${recordType}?domain=${domain}`;
+            // Map over the array of records:
+            // - For each record, call `renderRecordCard` to generate its HTML.
+            // - Concatenate the resulting HTML strings using `join("")`.
+            return records.map(record => renderRecordCard(record)).join("");
+        }
 
+        // 3. Main logic and event handlers
+        /**
+        * Fetches and displays the DNS or email authentication record(s) for a given domain and record type.
+        * 
+        * This function handles user input validation, dynamically constructs the API endpoint URL,
+        * fetches data asynchronously, and displays results or errors in the UI.
+        * 
+        * @async
+        * 
+        * Functionality:
+        * - Retrieves the user-inputted domain and record type from the form.
+        * - Validates the domain input to ensure it is not empty.
+        * - Constructs an API URL based on the record type.
+        * - Fetches data from the API and processes the response.
+        * - Renders results in the appropriate format (single record or overview).
+        * - Displays error messages if the input is invalid, the API call fails, or the response contains errors.
+        * 
+        * Example Usage:
+        * - User inputs a domain (`example.com`) and selects a record type (`DMARC`).
+        * - The function fetches the DMARC record from the API and displays it in the results container.
+        */
+        async function checkRecord() {
+            // Get user input: domain and record type.
+            const domain = document.getElementById('domain').value.trim(); // Retrieve and trim whitespace from the domain input.
+            const recordType = document.getElementById('recordType').value; // Get the selected record type.
+            const resultBox = document.getElementById('result'); // Get the container where results will be displayed.
+
+            // Validate the domain input: display an error if it is empty.
+            if (!domain) {
+                resultBox.innerHTML = "<div class='error'>Please enter a valid domain.</div>";
+                return; // Stop execution if the domain is invalid.
+            }
+
+            // Construct the API endpoint URL based on the selected record type.
+            const url = recordType === "overview" 
+                ? `/api/overview?domain=${domain}` // Use the overview API endpoint if "overview" is selected.
+                : `/api/${recordType}?domain=${domain}`; // Use the specific record type API endpoint otherwise.
+
+            // Display a loading message in the results container while the API call is in progress.
             resultBox.innerHTML = "<div class='loading'>Loading data...</div>";
 
             try {
+                // Make the API request using the fetch API and await the response.
                 const response = await fetch(url);
-                const data = await response.json();
+                const data = await response.json(); // Parse the JSON response from the API.
 
+                // Check if the response status is OK (200–299 range).
                 if (response.ok) {
-                    if (recordType === "overview") {
-                        resultBox.innerHTML = renderOverview(data.records);
-                    } else {
-                        resultBox.innerHTML = renderSingleRecord(recordType, data);
-                    }
+                    // Render results based on the selected record type:
+                    // - Use `renderOverview` for "overview" responses.
+                    // - Use `renderSingleRecord` for other record types.
+                    resultBox.innerHTML = recordType === "overview" 
+                        ? renderOverview(data.records) 
+                        : renderSingleRecord(recordType, data);
                 } else {
+                    // Handle API errors by displaying an error message in the results container.
                     resultBox.innerHTML = `<div class='error'>Error: ${data.error || "Failed to fetch data"}</div>`;
                 }
             } catch (error) {
+                // Handle unexpected errors (e.g., network issues) by displaying an error message.
                 resultBox.innerHTML = `<div class='error'>Error: ${error.message}</div>`;
             }
-        }    
-        
-        
-        function renderRecordCard(record) {
-            const statusClass = record.status === "error" ? "record-error" : "record-success";
-            const parsedDetails = record.parsed_record
-                ? `<div id="details-${record.title}" style="display:none;">
-                       <h4>Parsed Details:</h4>
-                       <ul>
-                           ${Object.entries(record.parsed_record).map(
-                               ([key, value]) => `<li><strong>${key}:</strong> ${value || "No value available"}<br><em>${getExplanation(key, record.title.toLowerCase())}</em></li>`
-                           ).join("")}
-                       </ul>
-                   </div>`
-                : "";
-        
-            return `
-                <div class="record-card ${statusClass}">
-                    <h2>${record.title}</h2>
-                    <p><strong>Status:</strong> ${record.status}</p>
-                    <h4>Raw Data:</h4>
-                    <pre>${JSON.stringify(record.value, null, 2)}</pre>
-                    ${parsedDetails}
-                    <button onclick="toggleDetails('details-${record.title}')">Details</button>
-                </div>
-            `;
         }
-        
-        function renderSingleRecord(recordType, data) {
-            const record = {
-                title: recordType.toUpperCase(),
-                value: data,
-                parsed_record: data.parsed_record || {}, // Include parsed details if available
-                status: data.error ? "error" : "success",
-            };
-        
-            return renderRecordCard(record);
-        }
-        
-        
-        function renderOverview(records) {
-            if (!records || !Array.isArray(records) || records.length === 0) {
-                return "<div class='error'>No records found for this domain.</div>";
-            }
-        
-            return records.map(record => renderRecordCard(record)).join("");
-        }
-        
-        
-        function renderRecordCard(record) {
-            const statusClass = record.status === "error" ? "record-error" : "record-success";
-            const parsedDetails = record.parsed_record && Object.keys(record.parsed_record).length > 0
-                ? `<div id="details-${record.title}" style="display:none;">
-                       <h4>Parsed Details:</h4>
-                       <ul>
-                           ${Object.entries(record.parsed_record).map(
-                               ([key, value]) => `<li><strong>${key}:</strong> ${value || "No value available"}<br><em>${getExplanation(key, record.title.toLowerCase())}</em></li>`
-                           ).join("")}
-                       </ul>
-                   </div>`
-                : "";
-        
-            return `
-                <div class="record-card ${statusClass}">
-                    <h2>${record.title}</h2>
-                    <p><strong>Status:</strong> ${record.status}</p>
-                    <h4>Raw Data:</h4>
-                    <pre>${JSON.stringify(record.value, null, 2)}</pre>
-                    ${parsedDetails}
-                    <button onclick="toggleDetails('details-${record.title}')">Details</button>
-                </div>
-            `;
-        }
-        
-        
-        function getExplanation(key, recordType) {
-            const explanation = explanations[recordType]?.[key] || "No detailed explanation available for this key.";
-            return `<em>${explanation}</em>`;
-        }
-        
-        
+
+
+        // 4. Data definitions
         const explanations = {
             dmarc: {
-                    "\"v": "- Version of the DMARC policy.<br><br>",
-                    "p": "- Policy for emails failing DMARC checks (e.g., 'none', 'quarantine', 'reject').<br><br>",
-                    "sp": "- Policy for subdomains failing DMARC checks.<br><br>",
-                    "pct": "- Percentage of emails to which the DMARC policy is applied.<br><br>",
-                    "rua": " -Aggregate report URIs (e.g., email addresses) where feedback is sent.<br><br>",
-                    "ruf": "- Forensic report URIs for individual failure events.<br><br>",
-                    "adkim": "- Alignment mode for DKIM (strict or relaxed).<br><br>",
-                    "aspf": "- Alignment mode for SPF (strict or relaxed).<br><br>",
-                    "fo": "- Failure options for DMARC failures.<br><br>",
-                    "rf": "- Report format for forensic reports.<br><br>",
-                    "ri": "- Interval for aggregate reports in seconds.<br><br>",
-                    },
+                "\"v": " - Version of the DMARC policy.<br><br>",
+                    "p": " - Policy for emails failing DMARC checks (e.g., 'none', 'quarantine', 'reject').<br><br>",
+                    "sp": " - Policy for subdomains failing DMARC checks.<br><br>",
+                    "pct": " - Percentage of emails to which the DMARC policy is applied.<br><br>",
+                    "rua": " - Aggregate report URIs (e.g., email addresses) where feedback is sent.<br><br>",
+                    "ruf": " - Forensic report URIs for individual failure events.<br><br>",
+                    "adkim": " - Alignment mode for DKIM (strict or relaxed).<br><br>",
+                    "aspf": " - Alignment mode for SPF (strict or relaxed).<br><br>",
+                    "fo": " - Failure options for DMARC failures.<br><br>",
+                    "rf": " - Report format for forensic reports.<br><br>",
+                    "ri": " - Interval for aggregate reports in seconds.<br><br>",
+            },
             spf: {
-                    "\"v": "- Version of the SPF policy.<br><br>",
-                    "-all\"": "- Defines the default policy (e.g., '-all' for hard fail).<br><br>",
-                    "ip4": "- Specifies an IPv4 address range allowed to send emails.<br><br>",
-                    "ip6": "- Specifies an IPv6 address range allowed to send emails.<br><br>",
-                    "a": "- Allows all A records in the domain to send emails.<br><br>",
-                    "mx": "- Allows all MX records in the domain to send emails.<br><br>",
-                    "redirect": "- Redirects to another domain for SPF checks.<br><br>",
-                    "include:spf.protection.outlook.com": "- Includes another domain for SPF checks.<br><br>",
-                    "include:_spf.google.com": "- Includes another domain for SPF checks.<br><br>",
-                    "include:amazonses.com": "- Includes another domain for SPF checks.<br><br>",
-                    "~all\"": "- Soft fail policy (emails are marked but not rejected).<br><br>",
-                    },
+                "\"v": " - Version of the SPF policy.<br><br>",
+                    "-all\"": " - Defines the default policy (e.g., '-all' for hard fail).<br><br>",
+                    "ip4": " - Specifies an IPv4 address range allowed to send emails.<br><br>",
+                    "ip6": " - Specifies an IPv6 address range allowed to send emails.<br><br>",
+                    "a": " - Allows all A records in the domain to send emails.<br><br>",
+                    "mx": " - Allows all MX records in the domain to send emails.<br><br>",
+                    "redirect": " - Redirects to another domain for SPF checks.<br><br>",
+                    "include:spf.protection.outlook.com": " - Includes another domain for SPF checks.<br><br>",
+                    "include:_spf.google.com": " - Includes another domain for SPF checks.<br><br>",
+                    "include:amazonses.com": " - Includes another domain for SPF checks.<br><br>",
+                    "~all\"": " - Soft fail policy (emails are marked but not rejected).<br><br>",
+            },
             dkim: {
-                    "\"v": "Version of the DKIM policy.<br><br>",
+                "\"v": "Version of the DKIM policy.<br><br>",
                     "k": "Key type used for DKIM signing (e.g., 'rsa').<br><br>",
                     "p": "Public key used for verifying DKIM signatures.<br><br>",
                     "s": "Service type (e.g., email).<br><br>",
@@ -342,9 +497,9 @@
                     "x": "Expiration time for the DKIM key.<br><br>",
                     "z": "Size of the DKIM key.<br><br>",
                     "d": "Domain for which the DKIM key is used.<br><br>",
-                    },
+            },
             dns: {
-                    "A": "IPv4 address records for the domain.<br><br>",
+                "A": "IPv4 address records for the domain.<br><br>",
                     "AAAA": "IPv6 address records for the domain.<br><br>",
                     "MX": "Mail exchange server records for the domain.<br><br>",
                     "TXT": "Text records containing metadata for the domain.<br><br>",
@@ -353,27 +508,8 @@
                     "SOA": "Start of authority record for the domain.<br><br>",
                     "SRV": "Service locator records for the domain.<br><br>",
                     "PTR": "Pointer records for reverse DNS lookups.<br><br>",
-                },
-        };      
-        
-        
-        function toggleDetails(id) {
-            const detailsElement = document.getElementById(id);
-            if (detailsElement.style.display === "none") {
-                detailsElement.style.display = "block";
-            } else {
-                detailsElement.style.display = "none";
-            }
-        }
-        
-        
-        
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter') {
-                checkRecord();
-            }
-        });
-        
+            },
+        };
     </script>
 </body>
 </html>

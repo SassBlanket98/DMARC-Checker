@@ -1,6 +1,6 @@
+import asyncio  # Enables asynchronous programming in Python
 import dns.asyncresolver  # Use asynchronous DNS resolver for handling async tasks
 import logging  # Provides logging functionality for debugging
-import asyncio  # Enables asynchronous programming in Python
 
 # Configure logging to display debug information
 logging.basicConfig(level=logging.DEBUG)
@@ -63,7 +63,6 @@ async def get_spf_record(domain):
                 logging.info(f"SPF record found for {domain}: {record.to_text()}")
                 return {"parsed_record": parse_spf(record.to_text()), "spf_record": record.to_text()}
 
-
         logging.warning(f"No SPF record found for domain: {domain}")
         return {"error": "No SPF record found"}
     except dns.resolver.NoAnswer:
@@ -80,41 +79,77 @@ async def get_spf_record(domain):
         return {"error": f"Internal server error: {str(e)}"}
 
 # ----------------------------- DKIM Record Lookup ----------------------------
-async def get_dkim_record(selector, domain):
+async def get_all_dkim_records(domain, selectors=None):
     """
-    Fetch the DKIM record for a given selector and domain.
+    Fetch all DKIM records for the provided selectors and domain.
 
     Args:
-        selector (str): The DKIM selector.
         domain (str): The domain name to query.
+        selectors (list): A list of DKIM selectors to query. Defaults to common selectors if not provided.
 
     Returns:
-        dict: DKIM record and parsed data, or an error message.
+        dict: A dictionary containing DKIM records and parsed data, or errors for each selector.
     """
-    try:
-        logging.debug(f"Starting DKIM lookup for selector {selector} on domain {domain}")
-        resolver = dns.asyncresolver.Resolver()
-        result = await resolver.resolve(f"{selector}._domainkey.{domain}", 'TXT')
+    # Log inputs for debugging
+    logging.debug(f"Raw input - Domain: {domain}, Selectors: {selectors}")
 
-        for record in result:
-            dkim_text = record.to_text()
-            logging.info(f"DKIM record found for {selector}.{domain}: {dkim_text}")
-            return {"dkim_record": dkim_text, "parsed_record": parse_dkim(dkim_text)}
+    # Validate the domain
+    if not domain or not isinstance(domain, str):
+        raise ValueError("Invalid domain. Must be a non-empty string.")
 
-        logging.warning(f"No DKIM record found for {selector}.{domain}")
-        return {"error": f"No DKIM record found for {selector}.{domain}", "parsed_record": {}}
-    except dns.resolver.NoAnswer:
-        logging.warning(f"No DKIM record found for {selector}.{domain}")
-        return {"error": f"No DKIM record found for {selector}.{domain}", "parsed_record": {}}
-    except dns.resolver.NXDOMAIN:
-        logging.error(f"Domain does not exist: {domain}")
-        return {"error": f"Domain {domain} does not exist", "parsed_record": {}}
-    except dns.resolver.Timeout:
-        logging.error(f"Timeout while resolving DKIM record for {selector}.{domain}")
-        return {"error": "Timeout while resolving DKIM record", "parsed_record": {}}
-    except Exception as e:
-        logging.error(f"Unexpected error fetching DKIM record for {selector}.{domain}: {e}")
-        return {"error": f"Internal server error: {str(e)}", "parsed_record": {}}
+    # Handle missing or invalid selectors
+    if selectors is None:
+        selectors = ["default", "google", "selector1", "selector2"]  # Default selectors
+    elif not isinstance(selectors, list) or not all(isinstance(sel, str) and sel.strip() for sel in selectors):
+        logging.error(f"Invalid selectors received: {selectors}")
+        raise ValueError("Invalid selectors. Must be a list of non-empty strings.")
+
+    # Log validated selectors
+    logging.debug(f"Validated selectors: {selectors}")
+
+    results = {}  # To store results for each selector
+    resolver = dns.asyncresolver.Resolver()
+
+    for selector in selectors:
+        try:
+            # Log the start of the DKIM lookup process
+            logging.debug(f"Starting DKIM lookup for selector {selector} on domain {domain}")
+
+            # Perform the DNS TXT record lookup for the DKIM selector
+            result = await resolver.resolve(f"{selector}._domainkey.{domain}", 'TXT')
+
+            # Extract and parse the DKIM records from the result
+            dkim_records = [record.to_text() for record in result]
+            logging.info(f"DKIM record(s) found for {selector}.{domain}: {dkim_records}")
+
+            # Store the successful result in the results dictionary
+            results[selector] = {
+                "dkim_records": dkim_records,
+                "parsed_records": [parse_dkim(record) for record in dkim_records if record],
+                "status": "success",
+            }
+
+        except dns.resolver.NoAnswer:
+            # Handle cases where no DKIM record is found for the selector
+            logging.warning(f"No DKIM record found for {selector}.{domain}")
+            results[selector] = {"error": f"No DKIM record found for {selector}.{domain}", "status": "error"}
+        except dns.resolver.NXDOMAIN:
+            # Handle cases where the domain does not exist
+            logging.error(f"Domain does not exist: {domain}")
+            results[selector] = {"error": f"Domain {domain} does not exist", "status": "error"}
+        except dns.resolver.Timeout:
+            # Handle cases where the DNS query times out
+            logging.error(f"Timeout while resolving DKIM record for {selector}.{domain}")
+            results[selector] = {"error": "Timeout while resolving DKIM record", "status": "error"}
+        except Exception as e:
+            # Handle any unexpected errors
+            logging.error(f"Unexpected error fetching DKIM record for {selector}.{domain}: {e}")
+            results[selector] = {"error": f"Internal server error: {str(e)}", "status": "error"}
+
+    # Return the results for all selectors
+    return results
+
+
 
 # ----------------------------- All DNS Records Lookup -----------------------------
 async def get_all_dns_records(domain):
@@ -152,8 +187,7 @@ async def get_all_dns_records(domain):
         logging.error(f"Unexpected error fetching DNS records for domain {domain}: {e}")
         return {"error": f"Internal server error: {str(e)}"}
 
-
-# Parsing functions
+# ----------------------------- Parsing Functions -----------------------------
 def parse_dmarc(dmarc_record):
     """Parse a DMARC record into a dictionary"""
     parsed = {}
@@ -168,7 +202,7 @@ def parse_dmarc(dmarc_record):
     return parsed or {"error": "Failed to parse DMARC record"}
 
 def parse_spf(spf_record):
-    """Parse a SPF record into a dictionary"""
+    """Parse an SPF record into a dictionary"""
     parsed = {}
     try:
         parts = spf_record.split()
@@ -182,9 +216,8 @@ def parse_spf(spf_record):
         logging.error(f"Error parsing SPF record: {e}")
     return parsed or {"error": "Failed to parse SPF record"}
 
-
 def parse_dns(dns_records):
-    """Parse a DNS record into a dictionary"""
+    """Parse DNS records into a dictionary"""
     try:
         parsed = {}
         for record_type, record_list in dns_records.items():
@@ -193,7 +226,6 @@ def parse_dns(dns_records):
     except Exception as e:
         logging.error(f"Error parsing DNS records: {e}")
         return {"error": "Failed to parse DNS records"}
-
 
 def parse_dkim(dkim_record):
     """Parse a DKIM record into a dictionary"""
@@ -207,5 +239,3 @@ def parse_dkim(dkim_record):
     except Exception as e:
         logging.error(f"Error parsing DKIM record: {e}")
     return parsed or {"error": "Failed to parse DKIM record"}
-
-    
