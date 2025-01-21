@@ -99,7 +99,7 @@ async def get_all_dkim_records(domain, selectors=None):
 
     # Handle missing or invalid selectors
     if selectors is None:
-        selectors = ["default", "google", "selector1", "selector2"]  # Default selectors
+        selectors = ["default", "google", "selector1", "selector2", "email", "dkim1"]  # Default selectors
     elif not isinstance(selectors, list) or not all(isinstance(sel, str) and sel.strip() for sel in selectors):
         logging.error(f"Invalid selectors received: {selectors}")
         raise ValueError("Invalid selectors. Must be a list of non-empty strings.")

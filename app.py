@@ -69,8 +69,8 @@ def format_record_data(record_type, data):
 
     return {
         "title": record_type.upper(),
-        "parsed_record": parsed_record,
         "value": data,
+        "parsed_record": parsed_record,
         "status": "success",
     }
 
