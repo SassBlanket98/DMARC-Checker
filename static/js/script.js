@@ -79,6 +79,13 @@ function initApp() {
     .getElementById("help-close")
     .addEventListener("click", closeHelpModal);
 
+  // Prevent modal close when clicking inside the modal content
+  document.querySelectorAll(".modal").forEach((modal) => {
+    modal.addEventListener("click", function (event) {
+      event.stopPropagation();
+    });
+  });
+
   // Export Results
   document.getElementById("export-btn").addEventListener("click", handleExport);
 
@@ -569,7 +576,7 @@ async function checkRecord() {
   if (recordType === "dkim") {
     const selectorTags = document.querySelectorAll(".selector-tag");
     selectorTags.forEach((tag) => {
-      selectors.push(tag.textContent.trim());
+      selectors.push(tag.textContent.trim().replace(/\s*×.*$/, ""));
     });
     errorState.lastSelectors = [...selectors];
   }
@@ -633,6 +640,31 @@ async function checkRecord() {
     // Handle network errors
     const errorObj = handleNetworkError(error);
     resultBox.innerHTML = renderErrorMessage(errorObj);
+
+    // Instead of using setTimeout to attach a click listener,
+    // dynamically create and append the retry button if conditions are met.
+    if (
+      errorState.retryCount < 3 &&
+      (errorObj.error_code.includes("TIMEOUT") ||
+        errorObj.error_code.includes("NETWORK_ERROR") ||
+        errorObj.error_code.includes("SERVER_ERROR"))
+    ) {
+      const retryButton = document.createElement("button");
+      retryButton.id = "retry-btn";
+      retryButton.className = "recovery-button";
+      retryButton.innerHTML = '<i class="fas fa-redo"></i> Retry Check';
+      retryButton.addEventListener("click", () => {
+        errorState.retryCount++;
+        checkRecord();
+      });
+
+      // Append the button into a designated container inside the error message.
+      // For example, if renderErrorMessage creates a container with class "issue-description":
+      const errorDescription = resultBox.querySelector(".issue-description");
+      if (errorDescription) {
+        errorDescription.appendChild(retryButton);
+      }
+    }
   }
 }
 
