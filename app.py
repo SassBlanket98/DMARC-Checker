@@ -1,17 +1,25 @@
-import asyncio  # Provides support for asynchronous programming
-import sys  # Used to access system-specific parameters and functions
+import asyncio
+import sys
 
-# Windows-specific setup: Ensures compatibility of the asyncio event loop on Windows platforms
+# Windows-specific setup
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-import logging  # Enables logging for debugging and error tracking
-from flask import Flask, request, jsonify, render_template  # Flask components for web app creation and API handling
-import dmarc_lookup  # Custom module for DNS record lookups (assumed external dependency)
-from concurrent.futures import ThreadPoolExecutor  # Allows for running functions asynchronously using a thread pool
+import logging
+from flask import Flask, request, jsonify, render_template
+import dmarc_lookup
+from concurrent.futures import ThreadPoolExecutor
+from error_handling import (
+    api_error_handler, 
+    configure_enhanced_logging,
+    handle_dmarc_error,
+    handle_spf_error,
+    handle_dkim_error,
+    DomainError
+)
 
-# Configure logging to output debug information to the console
-logging.basicConfig(level=logging.DEBUG)
+# Configure enhanced logging
+configure_enhanced_logging()
 
 # Initialize the Flask application
 app = Flask(__name__, 
@@ -22,7 +30,7 @@ app = Flask(__name__,
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
-# Thread pool executor to handle async operations in a synchronous Flask environment
+# Thread pool executor to handle async operations
 executor = ThreadPoolExecutor(4)
 
 # Utility Functions
@@ -36,9 +44,6 @@ def run_async(func, *args):
 
     Returns:
         The result of the asynchronous function.
-
-    Raises:
-        Exception: If the function execution fails, logs and re-raises the error.
     """
     try:
         coroutine = func(*args)
@@ -67,9 +72,8 @@ def format_record_data(record_type, data):
             "parsed_record": {}
         }
 
-    # Special handling for DKIM records to accurately reflect status
+    # Special handling for DKIM records
     if record_type == "dkim":
-        # Check if any valid DKIM records were found for any selector
         valid_dkim_found = False
         for selector_data in data.values():
             if isinstance(selector_data, dict) and selector_data.get("status") == "success":
@@ -82,7 +86,7 @@ def format_record_data(record_type, data):
         return {
             "title": record_type.upper(),
             "value": data,
-            "parsed_record": {},  # DKIM parsed records are handled differently
+            "parsed_record": {},
             "status": status,
         }
     
@@ -97,6 +101,7 @@ def format_record_data(record_type, data):
 
 # API Routes
 @app.route("/api/overview", methods=["GET"])
+@api_error_handler
 def overview():
     """
     Fetch and format an overview of DNS records for a given domain.
@@ -106,40 +111,46 @@ def overview():
 
     Returns:
         JSON: A collection of formatted DNS records (dmarc, spf, dkim, dns).
-
-    Raises:
-        400: If the domain parameter is not provided.
-        500: If any error occurs during the record retrieval process.
     """
     domain = request.args.get("domain")
     if not domain:
-        return jsonify({"error": "Domain parameter is required"}), 400
+        raise DomainError(
+            "Domain parameter is required", 
+            "MISSING_DOMAIN",
+            ["Please provide a domain name to check."]
+        )
 
-    try:
-        # Fetch all types of DNS records asynchronously
-        dmarc_data = run_async(dmarc_lookup.get_dmarc_record, domain)
-        spf_data = run_async(dmarc_lookup.get_spf_record, domain)
-        # Pass only the domain; rely on default selectors in get_all_dkim_records
-        dkim_data = run_async(dmarc_lookup.get_all_dkim_records, domain)
-        dns_data = run_async(dmarc_lookup.get_all_dns_records, domain)
-
-        # Aggregate all records into a response
-        overview_data = {
-            "records": [
-                format_record_data("dmarc", dmarc_data),
-                format_record_data("spf", spf_data),
-                format_record_data("dkim", dkim_data),
-                format_record_data("dns", dns_data),
+    # Validate domain format
+    if not is_valid_domain(domain):
+        raise DomainError(
+            f"Invalid domain format: {domain}", 
+            "INVALID_DOMAIN_FORMAT",
+            [
+                "Domain should be in a valid format (e.g., example.com).",
+                "Domain should not include protocols or paths (no http://, www., etc.)."
             ]
-        }
+        )
 
-        return jsonify(overview_data)
-    except Exception as e:
-        logging.error(f"Error in overview generation: {e}")
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    # Fetch all types of DNS records asynchronously
+    dmarc_data = run_async(dmarc_lookup.get_dmarc_record, domain)
+    spf_data = run_async(dmarc_lookup.get_spf_record, domain)
+    dkim_data = run_async(dmarc_lookup.get_all_dkim_records, domain)
+    dns_data = run_async(dmarc_lookup.get_all_dns_records, domain)
 
+    # Aggregate all records into a response
+    overview_data = {
+        "records": [
+            format_record_data("dmarc", dmarc_data),
+            format_record_data("spf", spf_data),
+            format_record_data("dkim", dkim_data),
+            format_record_data("dns", dns_data),
+        ]
+    }
+
+    return jsonify(overview_data)
 
 @app.route("/api/<record_type>", methods=["GET"])
+@api_error_handler
 def get_record(record_type):
     """
     Retrieve data for a specific DNS record type.
@@ -149,57 +160,115 @@ def get_record(record_type):
 
     Query Parameters:
         domain (str): The domain name to fetch records for.
-        selectors (str, optional): A comma-separated list of selectors for DKIM (if applicable).
+        selectors (str, optional): A comma-separated list of selectors for DKIM.
 
     Returns:
         JSON: The record data for the specified record type.
-
-    Raises:
-        400: If the domain parameter is missing or if the record type is unsupported.
-        500: If any error occurs during the record retrieval process.
     """
-    # Retrieve the domain parameter from the request
+    # Retrieve and validate parameters
     domain = request.args.get("domain")
-    raw_selectors = request.args.get("selectors", "")  # Default to an empty string if not provided
+    raw_selectors = request.args.get("selectors", "")
+    
+    if not domain:
+        raise DomainError(
+            "Domain parameter is required", 
+            "MISSING_DOMAIN",
+            ["Please provide a domain name to check."]
+        )
+        
+    # Validate domain format
+    if not is_valid_domain(domain):
+        raise DomainError(
+            f"Invalid domain format: {domain}", 
+            "INVALID_DOMAIN_FORMAT",
+            [
+                "Domain should be in a valid format (e.g., example.com).",
+                "Domain should not include protocols or paths (no http://, www., etc.)."
+            ]
+        )
+
+    # Validate record type
+    valid_record_types = ["dmarc", "spf", "dkim", "dns"]
+    if record_type not in valid_record_types:
+        raise DomainError(
+            f"Unsupported record type: {record_type}", 
+            "INVALID_RECORD_TYPE",
+            [f"Supported record types are: {', '.join(valid_record_types)}"]
+        )
 
     # Parse selectors into a list if provided
     selectors = [sel.strip() for sel in raw_selectors.split(",") if sel.strip()] or None
 
     # Log the received parameters for debugging
-    logging.debug(f"Received domain: {domain}, record_type: {record_type}, selectors: {selectors}")
-
-    # Validate that the domain parameter is present
-    if not domain:
-        return jsonify({"error": "Domain parameter is required"}), 400
+    logging.debug(f"Processing request - Domain: {domain}, Record Type: {record_type}, Selectors: {selectors}")
 
     try:
-        # Fetch the appropriate record type
+        # Fetch the appropriate record type with enhanced error handling
         if record_type == "dmarc":
-            # Fetch DMARC record for the domain
-            data = run_async(dmarc_lookup.get_dmarc_record, domain)
+            try:
+                data = run_async(dmarc_lookup.get_dmarc_record, domain)
+            except Exception as e:
+                return jsonify(handle_dmarc_error(domain, e)), 404
         elif record_type == "spf":
-            # Fetch SPF record for the domain
-            data = run_async(dmarc_lookup.get_spf_record, domain)
+            try:
+                data = run_async(dmarc_lookup.get_spf_record, domain)
+            except Exception as e:
+                return jsonify(handle_spf_error(domain, e)), 404
         elif record_type == "dkim":
-            # Fetch DKIM records for the domain using selectors
-            data = run_async(dmarc_lookup.get_all_dkim_records, domain, selectors)
+            # Need to handle each selector individually
+            try:
+                data = run_async(dmarc_lookup.get_all_dkim_records, domain, selectors)
+                # Check if all selectors failed
+                all_failed = True
+                for selector, selector_data in data.items():
+                    if selector_data.get("status") == "success":
+                        all_failed = False
+                        break
+                
+                if all_failed and selectors:
+                    logging.warning(f"No DKIM records found for any selector on domain: {domain}")
+                    # Add suggestions to the response
+                    data["suggestions"] = [
+                        "No DKIM records were found for any of the provided selectors.",
+                        "Try different selectors specific to your email provider.",
+                        "Common selectors include: google, default, selector1, selector2"
+                    ]
+            except Exception as e:
+                selector_str = ", ".join(selectors) if selectors else "default selectors"
+                return jsonify(handle_dkim_error(domain, selector_str, e)), 404
         elif record_type == "dns":
-            # Fetch all DNS records for the domain
             data = run_async(dmarc_lookup.get_all_dns_records, domain)
-        else:
-            # Return an error for unsupported record types
-            return jsonify({"error": "Unsupported record type."}), 400
 
         # Return the fetched data as a JSON response
         return jsonify(data)
+    
     except Exception as e:
-        # Log any unexpected errors that occur during processing
-        logging.error(f"Error fetching {record_type} record: {e}")
-        # Return a JSON response with the error message
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+        # This should be caught by the decorator, but just in case
+        logging.exception(f"Unhandled error in get_record: {e}")
+        return jsonify({
+            "error": f"An unexpected error occurred: {str(e)}",
+            "error_code": "UNEXPECTED_ERROR",
+            "suggestions": [
+                "Please try again later.",
+                "If the problem persists, contact support."
+            ]
+        }), 500
 
-
-
+def is_valid_domain(domain):
+    """
+    Validate domain format.
+    
+    Args:
+        domain (str): Domain to validate
+        
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    import re
+    # Basic domain validation regex
+    # This is a simplified version - consider a more robust validation for production
+    pattern = r'^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, domain))
 
 # HTML Routes
 @app.route('/')
@@ -212,9 +281,32 @@ def home():
     """
     return render_template('index.html')
 
+# Error handlers for HTTP errors
+@app.errorhandler(404)
+def page_not_found(e):
+    """Handle 404 errors."""
+    return jsonify({
+        "error": "The requested resource was not found",
+        "error_code": "NOT_FOUND",
+        "suggestions": [
+            "Check that the URL is correct",
+            "Ensure you're using a supported API endpoint"
+        ]
+    }), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    """Handle 500 errors."""
+    logging.error(f"Server error: {e}")
+    return jsonify({
+        "error": "An internal server error occurred",
+        "error_code": "SERVER_ERROR",
+        "suggestions": [
+            "Please try again later",
+            "If the problem persists, contact support"
+        ]
+    }), 500
+
 # Main Entry Point
 if __name__ == '__main__':
-    """
-    Start the Flask application in debug mode for development purposes.
-    """
     app.run(debug=True)
