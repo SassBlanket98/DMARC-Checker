@@ -14,7 +14,9 @@ from concurrent.futures import ThreadPoolExecutor  # Allows for running function
 logging.basicConfig(level=logging.DEBUG)
 
 # Initialize the Flask application
-app = Flask(__name__)
+app = Flask(__name__, 
+            static_folder='static',
+            template_folder='templates')
 
 # Create a new asyncio event loop for asynchronous operations
 loop = asyncio.new_event_loop()
