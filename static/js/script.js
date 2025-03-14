@@ -1039,66 +1039,152 @@ function renderDetailedRecordCard(record, index) {
 
 // Function to update the overview dashboard with correct DKIM status
 function updateOverviewDashboard(records) {
-  // Find the DKIM record
-  const dkimRecord = records.find((record) => record.title === "DKIM");
+  // Initialize the score methodology modal
+  initScoreDetailsModal();
 
-  if (dkimRecord) {
-    // Check if any valid DKIM selectors were found
-    let validDkimFound = false;
+  // Calculate the authentication score
+  const scoreData = window.ScoreMethodology.calculateAuthScore(records);
 
-    if (!dkimRecord.value.error) {
-      for (const [selector, data] of Object.entries(dkimRecord.value)) {
-        if (
-          data.status === "success" &&
-          data.dkim_records &&
-          data.dkim_records.length > 0
-        ) {
-          validDkimFound = true;
-          break;
-        }
-      }
-    }
-
-    // Update the DKIM indicator in the overview
-    const dkimItem = document.querySelector(
-      ".score-details .score-item:nth-child(3) .score-item-value"
-    );
-    if (dkimItem) {
-      if (validDkimFound) {
-        dkimItem.innerHTML = '<i class="fas fa-check-circle"></i>';
-        dkimItem.style.color = "var(--success-color)";
-      } else {
-        dkimItem.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-        dkimItem.style.color = "var(--error-color)";
-      }
-    }
-
-    // Update the authentication score
-    updateAuthenticationScore();
-  }
-}
-
-// Function to update the authentication score based on all records
-function updateAuthenticationScore() {
-  const scoreItems = document.querySelectorAll(
-    ".score-details .score-item-value"
-  );
-  let totalItems = scoreItems.length;
-  let successItems = 0;
-
-  scoreItems.forEach((item) => {
-    if (item.innerHTML.includes("fa-check-circle")) {
-      successItems++;
-    }
-  });
-
-  const scorePercentage = Math.round((successItems / totalItems) * 100);
+  // Update the score circle
   const scoreCircle = document.querySelector(".score-circle");
   const scoreValue = document.querySelector(".score-value");
 
   if (scoreCircle && scoreValue) {
-    scoreCircle.style.setProperty("--score-percent", `${scorePercentage}%`);
-    scoreValue.textContent = `${scorePercentage}%`;
+    // Update the score percentage
+    scoreCircle.style.setProperty(
+      "--score-percent",
+      `${scoreData.overallScore}%`
+    );
+    scoreValue.textContent = `${scoreData.overallScore}%`;
+
+    // Add the letter grade
+    if (!document.querySelector(".letter-grade")) {
+      const letterGrade = document.createElement("div");
+      letterGrade.className = "letter-grade";
+      letterGrade.textContent = `Grade ${scoreData.letterGrade}`;
+      scoreValue.appendChild(letterGrade);
+    } else {
+      document.querySelector(
+        ".letter-grade"
+      ).textContent = `Grade ${scoreData.letterGrade}`;
+    }
+
+    // Add the letter grade indicator
+    if (!document.querySelector(".score-letter")) {
+      const letterIndicator = document.createElement("div");
+      letterIndicator.className = `score-letter score-letter-${scoreData.letterGrade}`;
+      letterIndicator.textContent = scoreData.letterGrade;
+      document.querySelector(".score-container").appendChild(letterIndicator);
+    } else {
+      const letterIndicator = document.querySelector(".score-letter");
+      letterIndicator.className = `score-letter score-letter-${scoreData.letterGrade}`;
+      letterIndicator.textContent = scoreData.letterGrade;
+    }
+  }
+
+  // Update the individual component indicators
+  const componentScores = scoreData.componentScores;
+
+  // Update each component in the score details
+  Object.entries(componentScores).forEach(([component, data]) => {
+    const componentItem = document.querySelector(
+      `.score-details .score-item:nth-child(${getComponentIndex(
+        component
+      )}) .score-item-value`
+    );
+
+    if (componentItem) {
+      if (data.status === "success") {
+        componentItem.innerHTML = '<i class="fas fa-check-circle"></i>';
+        componentItem.style.color = "var(--success-color)";
+      } else {
+        componentItem.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+        componentItem.style.color = "var(--error-color)";
+      }
+    }
+  });
+
+  // Update the issues and recommendations section
+  updateIssuesSection(scoreData.recommendations);
+
+  // Add a "View Score Details" button
+  if (!document.getElementById("view-score-details")) {
+    const detailsButton = document.createElement("button");
+    detailsButton.id = "view-score-details";
+    detailsButton.className = "score-details-button";
+    detailsButton.innerHTML =
+      '<i class="fas fa-chart-bar"></i> View Detailed Score Breakdown';
+    detailsButton.addEventListener("click", () =>
+      openScoreDetailsModal(scoreData)
+    );
+
+    // Append after the score label
+    document.querySelector(".score-label").after(detailsButton);
+  }
+}
+
+// Helper function to get the component index in the score details section
+function getComponentIndex(component) {
+  const componentOrder = { dmarc: 1, spf: 2, dkim: 3, dns: 4 };
+  return componentOrder[component] || 1;
+}
+
+// Update the issues section with recommendations
+function updateIssuesSection(recommendations) {
+  const issuesContainer = document.querySelector(".issues-container");
+  if (!issuesContainer) return;
+
+  // Clear existing issues except the title
+  const issuesTitle = issuesContainer.querySelector("h3");
+  issuesContainer.innerHTML = "";
+  issuesContainer.appendChild(issuesTitle);
+
+  if (recommendations.length === 0) {
+    // Add a success message if no recommendations
+    const successItem = document.createElement("div");
+    successItem.className = "issue-item issue-info";
+    successItem.innerHTML = `
+      <div class="issue-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="issue-content">
+        <div class="issue-title">No Critical Issues Found</div>
+        <div class="issue-description">
+          Your email authentication configuration appears to be following best practices. Continue monitoring your domain's email security regularly.
+        </div>
+      </div>
+    `;
+    issuesContainer.appendChild(successItem);
+  } else {
+    // Add each recommendation as an issue
+    recommendations.forEach((rec) => {
+      const priority = rec.priority;
+      const issueClass =
+        priority === "high"
+          ? "issue-error"
+          : priority === "medium"
+          ? "issue-warning"
+          : "issue-info";
+      const iconClass =
+        priority === "high"
+          ? "exclamation-circle"
+          : priority === "medium"
+          ? "exclamation-triangle"
+          : "info-circle";
+
+      const issueItem = document.createElement("div");
+      issueItem.className = `issue-item ${issueClass}`;
+      issueItem.innerHTML = `
+        <div class="issue-icon">
+          <i class="fas fa-${iconClass}"></i>
+        </div>
+        <div class="issue-content">
+          <div class="issue-title">${rec.title}</div>
+          <div class="issue-description">${rec.description}</div>
+        </div>
+      `;
+      issuesContainer.appendChild(issueItem);
+    });
   }
 }
 
@@ -1180,3 +1266,156 @@ function addToastStyles() {
   // We'll implement it to do nothing since the styles are already in the CSS file
   console.log("Toast styles initialized");
 }
+
+// Score Details Modal
+let scoreDetailsModal;
+let currentScoreData;
+
+function initScoreDetailsModal() {
+  // Create the modal if it doesn't exist
+  if (!document.getElementById("score-details-modal")) {
+    const modalHtml = `
+      <div id="score-details-modal" class="modal-backdrop">
+        <div class="modal score-details-modal">
+          <div class="modal-header">
+            <div class="modal-title">Email Authentication Score Details</div>
+            <button class="modal-close" id="score-details-close">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body" id="score-details-content">
+            <!-- Score details will be inserted here -->
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Append the modal to the body
+    const modalContainer = document.createElement("div");
+    modalContainer.innerHTML = modalHtml;
+    document.body.appendChild(modalContainer);
+
+    // Add event listeners
+    document
+      .getElementById("score-details-close")
+      .addEventListener("click", closeScoreDetailsModal);
+    document
+      .getElementById("score-details-modal")
+      .addEventListener("click", function (event) {
+        if (event.target === this) {
+          closeScoreDetailsModal();
+        }
+      });
+
+    // Store the modal reference
+    scoreDetailsModal = document.getElementById("score-details-modal");
+  }
+}
+
+function openScoreDetailsModal(scoreData) {
+  // Store the current score data
+  currentScoreData = scoreData;
+
+  // Generate the content
+  const content = document.getElementById("score-details-content");
+  content.innerHTML = generateScoreDetailsContent(scoreData);
+
+  // Show the modal
+  scoreDetailsModal.classList.add("open");
+}
+
+function closeScoreDetailsModal() {
+  scoreDetailsModal.classList.remove("open");
+}
+
+function generateScoreDetailsContent(scoreData) {
+  const { overallScore, letterGrade, componentScores, recommendations } =
+    scoreData;
+
+  // Generate HTML for each component
+  const componentsHtml = Object.entries(componentScores)
+    .map(([component, data]) => {
+      const detailsHtml = data.details
+        .map(
+          (detail) => `
+      <div class="score-detail-item">${detail}</div>
+    `
+        )
+        .join("");
+
+      return `
+      <div class="score-component-details">
+        <h4>
+          ${component.toUpperCase()} 
+          <span class="component-score">${data.score}/${
+        data.maxScore
+      } points</span>
+          <span class="status-indicator status-${data.status}">
+            <i class="fas fa-${
+              data.status === "success" ? "check-circle" : "exclamation-circle"
+            }"></i>
+            ${data.status === "success" ? "Passed" : "Failed"}
+          </span>
+        </h4>
+        <div class="score-detail-items">
+          ${detailsHtml}
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+
+  // Generate HTML for recommendations
+  const recommendationsHtml =
+    recommendations.length > 0
+      ? recommendations
+          .map(
+            (rec) => `
+      <div class="recommendation ${rec.priority}-priority">
+        <h4>${rec.title}</h4>
+        <p>${rec.description}</p>
+      </div>
+    `
+          )
+          .join("")
+      : "<p>No additional recommendations at this time.</p>";
+
+  // Complete content
+  return `
+    <div class="score-summary">
+      <h3>Overall Score: ${overallScore}% (Grade ${letterGrade})</h3>
+      <p>Your domain's email authentication configuration has been evaluated based on industry best practices.</p>
+    </div>
+    
+    <h3>Component Scores</h3>
+    ${componentsHtml}
+    
+    <h3>Recommendations</h3>
+    ${recommendationsHtml}
+    
+    <div class="methodology-link">
+      <p>
+        <a href="#" id="view-methodology-link">View Score Methodology</a> to understand how these scores are calculated.
+      </p>
+    </div>
+  `;
+}
+
+// Initialize event listener for viewing methodology from the score details modal
+document.addEventListener("click", function (event) {
+  if (event.target.id === "view-methodology-link") {
+    event.preventDefault();
+    closeScoreDetailsModal(); // Close the score details modal
+    openHelpModal(); // Open the help modal
+
+    // Scroll to the methodology section after a slight delay
+    setTimeout(() => {
+      const methodologySection = document.querySelector(
+        ".modal-section:nth-child(5)"
+      );
+      if (methodologySection) {
+        methodologySection.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 300);
+  }
+});

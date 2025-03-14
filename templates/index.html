@@ -113,12 +113,12 @@
 
       <div id="overview-container" class="container" style="display: none">
         <h2>Authentication Score</h2>
+        <!-- Updated score-container div -->
         <div class="score-container">
           <div class="score-circle" style="--score-percent: 75%">
             <div class="score-value">75%</div>
           </div>
           <div class="score-label">Email Authentication Score</div>
-
           <div class="score-details">
             <div class="score-item">
               <div class="score-item-label">DMARC</div>
@@ -139,43 +139,9 @@
               </div>
             </div>
             <div class="score-item">
-              <div class="score-item-label">MX</div>
+              <div class="score-item-label">DNS</div>
               <div class="score-item-value" style="color: var(--success-color)">
                 <i class="fas fa-check-circle"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="issues-container">
-          <h3>Issues & Recommendations</h3>
-
-          <div class="issue-item issue-warning">
-            <div class="issue-icon">
-              <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <div class="issue-content">
-              <div class="issue-title">DMARC Policy set to 'none'</div>
-              <div class="issue-description">
-                Your DMARC policy is currently set to 'none', which only
-                monitors emails without taking action on failures. For better
-                protection, consider upgrading to 'quarantine' or 'reject'.
-              </div>
-            </div>
-          </div>
-
-          <div class="issue-item issue-info">
-            <div class="issue-icon">
-              <i class="fas fa-info-circle"></i>
-            </div>
-            <div class="issue-content">
-              <div class="issue-title">
-                Missing DKIM Records for Common Selectors
-              </div>
-              <div class="issue-description">
-                We couldn't find DKIM records for some common selectors. Try
-                adding selectors specifically used by your email service
-                provider.
               </div>
             </div>
           </div>
@@ -328,6 +294,98 @@
               </li>
             </ul>
           </div>
+          <div class="modal-section">
+            <h3>Email Authentication Score Methodology</h3>
+            <p>
+              The Email Authentication Score is a comprehensive rating of your
+              domain's email security configuration. The score is calculated
+              based on four key components with weighted importance:
+            </p>
+
+            <div class="methodology-breakdown">
+              <div class="methodology-component">
+                <h4>DMARC (35%)</h4>
+                <ul>
+                  <li>Having a DMARC record: 15 points</li>
+                  <li>
+                    Policy strength:
+                    <ul>
+                      <li>Reject (p=reject): 15 points</li>
+                      <li>Quarantine (p=quarantine): 10 points</li>
+                      <li>None (p=none): 5 points</li>
+                    </ul>
+                  </li>
+                  <li>Aggregate reporting (rua tag): 5 points</li>
+                </ul>
+              </div>
+
+              <div class="methodology-component">
+                <h4>SPF (30%)</h4>
+                <ul>
+                  <li>Having an SPF record: 15 points</li>
+                  <li>
+                    Policy strength:
+                    <ul>
+                      <li>Hard fail (-all): 10 points</li>
+                      <li>Soft fail (~all): 5 points</li>
+                      <li>Neutral (?all): 2 points</li>
+                      <li>Pass (+all): 0 points (security risk)</li>
+                    </ul>
+                  </li>
+                  <li>Including required sending sources: 5 points</li>
+                </ul>
+              </div>
+
+              <div class="methodology-component">
+                <h4>DKIM (25%)</h4>
+                <ul>
+                  <li>Having at least one valid DKIM selector: 15 points</li>
+                  <li>
+                    Multiple valid DKIM selectors: up to 10 additional points
+                  </li>
+                </ul>
+              </div>
+
+              <div class="methodology-component">
+                <h4>DNS Configuration (10%)</h4>
+                <ul>
+                  <li>MX records properly configured: 5 points</li>
+                  <li>A/AAAA records properly configured: 3 points</li>
+                  <li>TXT records properly configured: 2 points</li>
+                </ul>
+              </div>
+            </div>
+
+            <h4>Letter Grade Interpretation</h4>
+            <ul>
+              <li>
+                <strong>A (90-100%)</strong>: Excellent protection. Your domain
+                has strong email authentication.
+              </li>
+              <li>
+                <strong>B (80-89%)</strong>: Good protection with minor
+                improvements possible.
+              </li>
+              <li>
+                <strong>C (70-79%)</strong>: Moderate protection with several
+                improvements recommended.
+              </li>
+              <li>
+                <strong>D (60-69%)</strong>: Minimal protection with significant
+                improvements needed.
+              </li>
+              <li>
+                <strong>F (0-59%)</strong>: Inadequate protection. Your domain
+                is vulnerable to email spoofing.
+              </li>
+            </ul>
+
+            <p class="note">
+              <i class="fas fa-info-circle"></i> Note: This scoring system
+              prioritizes security best practices and follows industry
+              recommendations from M3AAWG, NIST, and the DMARC.org organization.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -338,5 +396,8 @@
 
     <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- New script imports -->
+    <script src="{{ url_for('static', filename='js/score_methodology.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/implementation.js') }}"></script>
   </body>
 </html>
