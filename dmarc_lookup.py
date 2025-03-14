@@ -479,20 +479,52 @@ def parse_spf(spf_record):
     """
     parsed = {}
     try:
-        if not spf_record.startswith('"v=spf1'):
-            logging.warning(f"Invalid SPF record format: {spf_record}")
+        # Clean up the input record - remove quotes if present
+        clean_record = spf_record.strip()
+        if clean_record.startswith('"') and clean_record.endswith('"'):
+            clean_record = clean_record[1:-1]
+            
+        if not clean_record.startswith("v=spf1"):
+            logging.warning(f"Invalid SPF record format: {clean_record}")
             parsed["warning"] = "Record doesn't start with v=spf1 which may indicate format issues"
             
-        parts = spf_record.split()
+        # Split the record into parts
+        parts = clean_record.split()
+        
+        # Track if we've found an 'all' mechanism
+        found_all = False
+        
+        # Process each part of the record
         for part in parts:
             if "=" in part:
+                # Handle key=value pairs
                 key_value = part.split("=", 1)
                 parsed[key_value[0].strip()] = key_value[1].strip()
+            elif part.startswith("include:"):
+                # Handle include directives
+                include_domain = part.split(":", 1)[1]
+                if "include" not in parsed:
+                    parsed["include"] = []
+                parsed["include"].append(include_domain)
+            elif part in ["-all", "~all", "?all", "+all"]:
+                # Handle 'all' mechanisms
+                parsed[part] = "Specified"
+                found_all = True
+            elif part.startswith("ip4:") or part.startswith("ip6:"):
+                # Handle IP specifications
+                prefix, value = part.split(":", 1)
+                if prefix not in parsed:
+                    parsed[prefix] = []
+                parsed[prefix].append(value)
+            elif part in ["mx", "a", "ptr"]:
+                # Handle simple mechanisms
+                parsed[part] = "Specified"
             else:
-                parsed[part.strip()] = None
+                # Handle unknown or special directives
+                parsed[part] = "Specified"
                 
         # Check for all mechanism
-        if not any(key in ['-all', '~all', '?all', '+all'] for key in parsed.keys()):
+        if not found_all:
             parsed["warning"] = "No 'all' mechanism found. SPF record should end with an all mechanism"
             
     except Exception as e:

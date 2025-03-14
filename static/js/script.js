@@ -910,17 +910,45 @@ function renderDetailedRecordCard(record, index) {
   // Generate parsed details rows
   let parsedDetailRows = "";
   if (record.parsed_record && Object.keys(record.parsed_record).length > 0) {
-    parsedDetailRows = Object.entries(record.parsed_record)
-      .map(
-        ([key, value]) => `
+    // Special handling for SPF record includes which might be arrays
+    if (record.title === "SPF") {
+      parsedDetailRows = Object.entries(record.parsed_record)
+        .map(([key, value]) => {
+          // Handle arrays (like for 'include' directives)
+          let displayValue = value;
+          if (Array.isArray(value)) {
+            displayValue = value.join(", ");
+          }
+
+          // For 'include:domain.com' keys, display the original key in the table
+          let displayKey = key;
+          if (key.startsWith("include:")) {
+            displayKey = key; // Keep the full key with domain
+          }
+
+          return `
+        <tr>
+          <td><strong>${displayKey}</strong></td>
+          <td>${displayValue || "Not specified"}</td>
+          <td>${getExplanation(key, record.title.toLowerCase())}</td>
+        </tr>
+        `;
+        })
+        .join("");
+    } else {
+      // Standard handling for other record types
+      parsedDetailRows = Object.entries(record.parsed_record)
+        .map(
+          ([key, value]) => `
         <tr>
           <td><strong>${key}</strong></td>
           <td>${value || "Not specified"}</td>
           <td>${getExplanation(key, record.title.toLowerCase())}</td>
         </tr>
       `
-      )
-      .join("");
+        )
+        .join("");
+    }
   }
 
   // Generate raw data content based on record type
@@ -1101,7 +1129,8 @@ function getExplanation(key, recordType) {
       a: "Allows all A records in the domain to send emails",
       mx: "Allows all MX records in the domain to send emails",
       redirect: "Redirects to another domain for SPF checks",
-      include: "Includes another domain for SPF checks",
+      include: "Includes another domain's SPF policy in this domain's policy",
+      warning: "Warning message about the SPF record configuration",
     },
     dkim: {
       v: "Version of the DKIM policy",
@@ -1119,7 +1148,26 @@ function getExplanation(key, recordType) {
     },
   };
 
-  return explanations[recordType]?.[key] || "No explanation available";
+  // Handle specific case for include with modified key
+  if (recordType === "spf" && key === "include") {
+    return explanations.spf.include;
+  }
+
+  // Clean up key for SPF record types to match our explanations
+  let lookupKey = key;
+  if (recordType === "spf") {
+    // Strip any domains from include: directives for lookup
+    if (key.startsWith("include:")) {
+      lookupKey = "include";
+    }
+
+    // Handle 'all' mechanisms with their modifiers
+    if (["-all", "~all", "?all", "+all"].includes(key)) {
+      lookupKey = key;
+    }
+  }
+
+  return explanations[recordType]?.[lookupKey] || "No explanation available";
 }
 
 // Initialize application when DOM is loaded
