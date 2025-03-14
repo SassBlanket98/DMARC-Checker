@@ -1,0 +1,322 @@
+// Add the missing addToastStyles function
+function addToastStyles() {
+  // This function is referenced in initApp but was never defined
+  // It should create or ensure toast notification styles are in place
+  // We'll implement it to do nothing since the styles are already in the CSS file
+  console.log("Toast styles initialized");
+}
+
+// Fix the renderDetailedRecordCard function to properly generate record card HTML
+function renderDetailedRecordCard(record, index) {
+  const recordId = `record-${index}`;
+
+  // Determine the correct status for DKIM records
+  let statusClass, statusText, statusIcon;
+
+  if (record.title === "DKIM") {
+    // For DKIM, check if any selectors were found successfully
+    const foundSelectors = [];
+    if (!record.value.error) {
+      for (const [selector, data] of Object.entries(record.value)) {
+        if (
+          selector !== "overall_status" && 
+          selector !== "recommendations" &&
+          data.status === "success" &&
+          data.dkim_records &&
+          data.dkim_records.length > 0
+        ) {
+          foundSelectors.push(selector);
+        }
+      }
+    }
+
+    // Set status based on whether any valid DKIM records were found
+    if (foundSelectors.length > 0) {
+      statusClass = "status-success";
+      statusText = "Success";
+      statusIcon = "check-circle";
+    } else {
+      statusClass = "status-error";
+      statusText = "Error";
+      statusIcon = "exclamation-circle";
+    }
+  } else {
+    // For non-DKIM records, use the original status logic
+    statusClass = record.status === "error" ? "status-error" : "status-success";
+    statusText = record.status === "error" ? "Error" : "Success";
+    statusIcon =
+      record.status === "error" ? "exclamation-circle" : "check-circle";
+  }
+
+  // Extract the actual record text based on record type
+  let actualRecordText = "";
+  if (record.status !== "error") {
+    if (
+      record.title === "DMARC" &&
+      record.value.dmarc_records &&
+      record.value.dmarc_records.length > 0
+    ) {
+      actualRecordText = record.value.dmarc_records[0];
+    } else if (record.title === "SPF" && record.value.spf_record) {
+      actualRecordText = record.value.spf_record;
+    } else if (record.title === "DKIM") {
+      // For DKIM, show a summary of which selectors were found
+      const foundSelectors = [];
+      const notFoundSelectors = [];
+
+      for (const [selector, data] of Object.entries(record.value)) {
+        if (
+          selector !== "overall_status" && 
+          selector !== "recommendations" &&
+          data.status === "success" &&
+          data.dkim_records &&
+          data.dkim_records.length > 0
+        ) {
+          foundSelectors.push(selector);
+        } else if (selector !== "overall_status" && selector !== "recommendations") {
+          notFoundSelectors.push(selector);
+        }
+      }
+
+      if (foundSelectors.length > 0) {
+        actualRecordText = `Found valid records for selectors: ${foundSelectors.join(
+          ", "
+        )}`;
+      } else {
+        actualRecordText = "No valid DKIM records found for any selector";
+      }
+    } else if (record.title === "DNS") {
+      // For DNS, show a summary of found record types
+      const recordTypes = [];
+      if (record.value.parsed_record) {
+        Object.keys(record.value.parsed_record).forEach((type) => {
+          if (record.value.parsed_record[type].length > 0) {
+            recordTypes.push(type);
+          }
+        });
+      }
+      actualRecordText = `Found record types: ${recordTypes.join(", ")}`;
+    }
+  }
+
+  // Determine recommendations based on record type and content
+  let recommendations = "";
+  if (record.title === "DMARC" && record.status === "success") {
+    const dmarcData = record.value.parsed_record || {};
+    const p = dmarcData.p || "";
+    if (p === "none") {
+      recommendations = `
+        <div class="recommendation">
+          <h4>Recommendation</h4>
+          <p>Your DMARC policy is set to 'none', which only monitors emails without taking action on failures. For better security, consider upgrading to 'quarantine' or 'reject' once you've verified that legitimate emails are passing DMARC checks.</p>
+        </div>
+      `;
+    }
+  } else if (record.title === "SPF" && record.status === "success") {
+    if (record.value.spf_record && record.value.spf_record.includes("~all")) {
+      recommendations = `
+        <div class="recommendation">
+          <h4>Recommendation</h4>
+          <p>Your SPF record uses a soft fail (~all) mechanism. For stronger protection against email spoofing, consider using a hard fail (-all) once you've verified all legitimate email sources are included in your SPF record.</p>
+        </div>
+      `;
+    }
+  } else if (record.title === "DKIM" && statusClass === "status-error") {
+    recommendations = `
+      <div class="recommendation">
+        <h4>Recommendation</h4>
+        <p>No valid DKIM records were found for any of the checked selectors. To improve email authentication, you should set up DKIM for your domain using selectors specified by your email service provider.</p>
+      </div>
+    `;
+  }
+
+  // Show suggestions if available (from server response)
+  if (record.value.suggestions && record.value.suggestions.length > 0) {
+    const suggestionsHtml = record.value.suggestions
+      .map((suggestion) => `<li>${suggestion}</li>`)
+      .join("");
+    recommendations += `
+      <div class="recommendation">
+        <h4>Server Suggestions</h4>
+        <ul class="suggestions-list">
+          ${suggestionsHtml}
+        </ul>
+      </div>
+    `;
+  }
+
+  // Parse record details for detailed view
+  let parsedDetails = "";
+  if (record.parsed_record && Object.keys(record.parsed_record).length > 0) {
+    parsedDetails = `
+      <table>
+        <thead>
+          <tr>
+            <th>Attribute</th>
+            <th>Value</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(record.parsed_record)
+            .map(
+              ([key, value]) => `
+              <tr>
+                <td><strong>${key}</strong></td>
+                <td>${value || "N/A"}</td>
+                <td>${getExplanation(key, record.title.toLowerCase())}</td>
+              </tr>
+            `
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `;
+  } else {
+    parsedDetails = "<p>No parsed details available.</p>";
+  }
+
+  // Generate raw data content based on record type
+  let rawDataContent = "";
+  if (record.status === "error") {
+    // If there's an error, display the error message
+    rawDataContent = renderErrorMessage(record.value);
+  } else {
+    // Otherwise, display the actual record data
+    const copyButton = actualRecordText ? 
+      `<button onclick="copyToClipboard('${actualRecordText.replace(/'/g, "\\'")}')" class="secondary">
+        <i class="fas fa-copy"></i> Copy
+      </button>` : '';
+      
+    rawDataContent = `
+      <div class="record-data">
+        ${actualRecordText ? 
+          `<div class="actual-record">
+            ${actualRecordText}
+          </div>
+          <div class="action-buttons">
+            ${copyButton}
+          </div>` : 
+          '<p>No raw data available.</p>'}
+      </div>
+    `;
+  }
+
+  // Complete HTML for the record card with proper tab structure
+  return `
+    <div class="record-card">
+      <div class="record-header" onclick="toggleRecordCard('${recordId}-body')">
+        <div class="record-title-area">
+          <h3>
+            <i class="fas fa-file-alt"></i>
+            ${record.title}
+          </h3>
+          <div class="status-indicator ${statusClass}">
+            <i class="fas fa-${statusIcon}"></i>
+            ${statusText}
+          </div>
+        </div>
+        <div class="record-controls">
+          <i class="fas fa-chevron-down expand-icon"></i>
+        </div>
+      </div>
+      <div class="record-body" id="${recordId}-body">
+        <div class="tabs" id="${recordId}-tabs">
+          <div class="tab active" data-tab="raw" onclick="switchTab('${recordId}', 'raw')">Raw Data</div>
+          <div class="tab" data-tab="parsed" onclick="switchTab('${recordId}', 'parsed')">Parsed Details</div>
+          <div class="tab" data-tab="recommendations" onclick="switchTab('${recordId}', 'recommendations')">Recommendations</div>
+        </div>
+        
+        <div class="tab-content active" id="${recordId}-raw" style="display: block;">
+          ${rawDataContent}
+        </div>
+        
+        <div class="tab-content" id="${recordId}-parsed" style="display: none;">
+          ${parsedDetails}
+        </div>
+        
+        <div class="tab-content" id="${recordId}-recommendations" style="display: none;">
+          ${recommendations || "<p>No recommendations available.</p>"}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Fix the toggleRecordCard function to handle edge cases better
+window.toggleRecordCard = function(id) {
+  const body = document.getElementById(id);
+  if (!body) {
+    console.error(`Element with id ${id} not found`);
+    return;
+  }
+  
+  body.classList.toggle("expanded");
+
+  const header = body.previousElementSibling;
+  if (!header) {
+    console.error(`Header element not found for ${id}`);
+    return;
+  }
+  
+  const icon = header.querySelector(".expand-icon");
+  if (!icon) {
+    console.error(`Expand icon not found for ${id}`);
+    return;
+  }
+
+  if (body.classList.contains("expanded")) {
+    icon.classList.remove("fa-chevron-down");
+    icon.classList.add("fa-chevron-up");
+  } else {
+    icon.classList.remove("fa-chevron-up");
+    icon.classList.add("fa-chevron-down");
+  }
+};
+
+// Fix the switchTab function to be more robust
+window.switchTab = function(recordId, tabName) {
+  // Get the tab container
+  const tabContainer = document.getElementById(`${recordId}-tabs`);
+  if (!tabContainer) {
+    console.error(`Tab container for ${recordId} not found`);
+    return;
+  }
+  
+  // Hide all tab contents in this record
+  const tabContents = document.querySelectorAll(`#${recordId} .tab-content`);
+  if (tabContents.length === 0) {
+    // If we can't find tab contents with the original selector, try a more specific one
+    const altTabContents = document.querySelectorAll(`[id^="${recordId}-"][id$="-raw"], [id^="${recordId}-"][id$="-parsed"], [id^="${recordId}-"][id$="-recommendations"]`);
+    altTabContents.forEach(tab => {
+      tab.classList.remove("active");
+      tab.style.display = "none";
+    });
+  } else {
+    tabContents.forEach(tab => {
+      tab.classList.remove("active");
+      tab.style.display = "none";
+    });
+  }
+
+  // Remove active class from all tabs
+  const tabs = tabContainer.querySelectorAll('.tab');
+  tabs.forEach(tab => tab.classList.remove("active"));
+
+  // Show selected tab
+  const activeTab = document.getElementById(`${recordId}-${tabName}`);
+  if (activeTab) {
+    activeTab.classList.add("active");
+    activeTab.style.display = "block";
+  } else {
+    console.error(`Tab ${tabName} for ${recordId} not found`);
+  }
+
+  // Add active class to selected tab button
+  const activeTabButton = tabContainer.querySelector(`.tab[data-tab="${tabName}"]`);
+  if (activeTabButton) {
+    activeTabButton.classList.add("active");
+  } else {
+    console.error(`Tab button for ${tabName} not found`);
+  }
+};

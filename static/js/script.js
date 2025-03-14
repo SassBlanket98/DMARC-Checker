@@ -262,10 +262,24 @@ function handleBatchCheck() {
 // Toggle record card expansion
 window.toggleRecordCard = function (id) {
   const body = document.getElementById(id);
+  if (!body) {
+    console.error(`Element with id ${id} not found`);
+    return;
+  }
+
   body.classList.toggle("expanded");
 
   const header = body.previousElementSibling;
+  if (!header) {
+    console.error(`Header element not found for ${id}`);
+    return;
+  }
+
   const icon = header.querySelector(".expand-icon");
+  if (!icon) {
+    console.error(`Expand icon not found for ${id}`);
+    return;
+  }
 
   if (body.classList.contains("expanded")) {
     icon.classList.remove("fa-chevron-down");
@@ -278,28 +292,53 @@ window.toggleRecordCard = function (id) {
 
 // Updated switchTab function to properly hide inactive tabs
 window.switchTab = function (recordId, tabName) {
+  // Get the tab container
+  const tabContainer = document.getElementById(`${recordId}-tabs`);
+  if (!tabContainer) {
+    console.error(`Tab container for ${recordId} not found`);
+    return;
+  }
+
   // Hide all tab contents in this record
   const tabContents = document.querySelectorAll(`#${recordId} .tab-content`);
-  tabContents.forEach((tab) => {
-    tab.classList.remove("active");
-    tab.style.display = "none"; // Explicitly hide all tabs
-  });
+  if (tabContents.length === 0) {
+    // If we can't find tab contents with the original selector, try a more specific one
+    const altTabContents = document.querySelectorAll(
+      `[id^="${recordId}-"][id$="-raw"], [id^="${recordId}-"][id$="-parsed"], [id^="${recordId}-"][id$="-recommendations"]`
+    );
+    altTabContents.forEach((tab) => {
+      tab.classList.remove("active");
+      tab.style.display = "none";
+    });
+  } else {
+    tabContents.forEach((tab) => {
+      tab.classList.remove("active");
+      tab.style.display = "none";
+    });
+  }
 
   // Remove active class from all tabs
-  const tabs = document.querySelectorAll(`#${recordId}-tabs .tab`);
+  const tabs = tabContainer.querySelectorAll(".tab");
   tabs.forEach((tab) => tab.classList.remove("active"));
 
   // Show selected tab
   const activeTab = document.getElementById(`${recordId}-${tabName}`);
   if (activeTab) {
     activeTab.classList.add("active");
-    activeTab.style.display = "block"; // Explicitly show the active tab
+    activeTab.style.display = "block";
+  } else {
+    console.error(`Tab ${tabName} for ${recordId} not found`);
   }
 
   // Add active class to selected tab button
-  document
-    .querySelector(`#${recordId}-tabs .tab[data-tab="${tabName}"]`)
-    .classList.add("active");
+  const activeTabButton = tabContainer.querySelector(
+    `.tab[data-tab="${tabName}"]`
+  );
+  if (activeTabButton) {
+    activeTabButton.classList.add("active");
+  } else {
+    console.error(`Tab button for ${tabName} not found`);
+  }
 };
 
 // Copy record data to clipboard
@@ -734,6 +773,8 @@ function renderDetailedRecordCard(record, index) {
     if (!record.value.error) {
       for (const [selector, data] of Object.entries(record.value)) {
         if (
+          selector !== "overall_status" &&
+          selector !== "recommendations" &&
           data.status === "success" &&
           data.dkim_records &&
           data.dkim_records.length > 0
@@ -779,12 +820,17 @@ function renderDetailedRecordCard(record, index) {
 
       for (const [selector, data] of Object.entries(record.value)) {
         if (
+          selector !== "overall_status" &&
+          selector !== "recommendations" &&
           data.status === "success" &&
           data.dkim_records &&
           data.dkim_records.length > 0
         ) {
           foundSelectors.push(selector);
-        } else {
+        } else if (
+          selector !== "overall_status" &&
+          selector !== "recommendations"
+        ) {
           notFoundSelectors.push(selector);
         }
       }
@@ -813,7 +859,8 @@ function renderDetailedRecordCard(record, index) {
   // Determine recommendations based on record type and content
   let recommendations = "";
   if (record.title === "DMARC" && record.status === "success") {
-    const p = record.parsed_record.p || "";
+    const dmarcData = record.value.parsed_record || {};
+    const p = dmarcData.p || "";
     if (p === "none") {
       recommendations = `
         <div class="recommendation">
@@ -886,11 +933,55 @@ function renderDetailedRecordCard(record, index) {
     parsedDetails = "<p>No parsed details available.</p>";
   }
 
-  // Updated markup to ensure proper initial tab state
+  // Generate raw data content based on record type
+  let rawDataContent = "";
+  if (record.status === "error") {
+    // If there's an error, display the error message
+    rawDataContent = renderErrorMessage(record.value);
+  } else {
+    // Otherwise, display the actual record data
+    const copyButton = actualRecordText
+      ? `<button onclick="copyToClipboard('${actualRecordText.replace(
+          /'/g,
+          "\\'"
+        )}')" class="secondary">
+        <i class="fas fa-copy"></i> Copy
+      </button>`
+      : "";
+
+    rawDataContent = `
+      <div class="record-data">
+        ${
+          actualRecordText
+            ? `<div class="actual-record">
+            ${actualRecordText}
+          </div>
+          <div class="action-buttons">
+            ${copyButton}
+          </div>`
+            : "<p>No raw data available.</p>"
+        }
+      </div>
+    `;
+  }
+
+  // Complete HTML for the record card with proper tab structure
   return `
     <div class="record-card">
       <div class="record-header" onclick="toggleRecordCard('${recordId}-body')">
-        <!-- Header content remains unchanged -->
+        <div class="record-title-area">
+          <h3>
+            <i class="fas fa-file-alt"></i>
+            ${record.title}
+          </h3>
+          <div class="status-indicator ${statusClass}">
+            <i class="fas fa-${statusIcon}"></i>
+            ${statusText}
+          </div>
+        </div>
+        <div class="record-controls">
+          <i class="fas fa-chevron-down expand-icon"></i>
+        </div>
       </div>
       <div class="record-body" id="${recordId}-body">
         <div class="tabs" id="${recordId}-tabs">
@@ -900,15 +991,15 @@ function renderDetailedRecordCard(record, index) {
         </div>
         
         <div class="tab-content active" id="${recordId}-raw" style="display: block;">
-          <!-- Raw data content -->
+          ${rawDataContent}
         </div>
         
         <div class="tab-content" id="${recordId}-parsed" style="display: none;">
-          <!-- Parsed details content -->
+          ${parsedDetails}
         </div>
         
         <div class="tab-content" id="${recordId}-recommendations" style="display: none;">
-          <!-- Recommendations content -->
+          ${recommendations || "<p>No recommendations available.</p>"}
         </div>
       </div>
     </div>
@@ -1030,3 +1121,11 @@ function getExplanation(key, recordType) {
 
 // Initialize application when DOM is loaded
 document.addEventListener("DOMContentLoaded", initApp);
+
+// Add toast styles
+function addToastStyles() {
+  // This function is referenced in initApp but was never defined
+  // It should create or ensure toast notification styles are in place
+  // We'll implement it to do nothing since the styles are already in the CSS file
+  console.log("Toast styles initialized");
+}
