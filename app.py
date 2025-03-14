@@ -62,12 +62,31 @@ def format_record_data(record_type, data):
     if "error" in data:
         return {
             "title": record_type.upper(),
-            "value": data["error"],
+            "value": data,
             "status": "error",
             "parsed_record": {}
         }
 
-    parsed_record = data.get("parsed_record", {}) if record_type in ["dmarc", "spf", "dkim", "dns"] else {}
+    # Special handling for DKIM records to accurately reflect status
+    if record_type == "dkim":
+        # Check if any valid DKIM records were found for any selector
+        valid_dkim_found = False
+        for selector_data in data.values():
+            if isinstance(selector_data, dict) and selector_data.get("status") == "success":
+                if "dkim_records" in selector_data and selector_data["dkim_records"]:
+                    valid_dkim_found = True
+                    break
+        
+        status = "success" if valid_dkim_found else "error"
+        
+        return {
+            "title": record_type.upper(),
+            "value": data,
+            "parsed_record": {},  # DKIM parsed records are handled differently
+            "status": status,
+        }
+    
+    parsed_record = data.get("parsed_record", {}) if record_type in ["dmarc", "spf", "dns"] else {}
 
     return {
         "title": record_type.upper(),

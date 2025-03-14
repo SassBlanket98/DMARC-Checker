@@ -299,7 +299,7 @@ function addToHistory(domain, recordType) {
   historyList.insertBefore(historyItem, historyList.firstChild);
 }
 
-// Record checking function - core functionality
+// Updated checkRecord function to incorporate DKIM status fix
 async function checkRecord() {
   const domain = document.getElementById("domain").value.trim();
   const recordType = document.getElementById("recordType").value;
@@ -367,6 +367,9 @@ async function checkRecord() {
 
         // Render records
         resultBox.innerHTML = renderDetailedRecords(data.records);
+
+        // Update the overview dashboard with correct statuses
+        updateOverviewDashboard(data.records);
       } else {
         // Render single record
         resultBox.innerHTML = renderDetailedRecord(recordType, data);
@@ -426,14 +429,45 @@ function renderDetailedRecord(recordType, data) {
   return renderDetailedRecordCard(record, 0);
 }
 
-// Render a detailed record card with tabs
+// Updated renderDetailedRecordCard function to fix DKIM status display
 function renderDetailedRecordCard(record, index) {
   const recordId = `record-${index}`;
-  const statusClass =
-    record.status === "error" ? "status-error" : "status-success";
-  const statusText = record.status === "error" ? "Error" : "Success";
-  const statusIcon =
-    record.status === "error" ? "exclamation-circle" : "check-circle";
+
+  // Determine the correct status for DKIM records
+  let statusClass, statusText, statusIcon;
+
+  if (record.title === "DKIM") {
+    // For DKIM, check if any selectors were found successfully
+    const foundSelectors = [];
+    if (!record.value.error) {
+      for (const [selector, data] of Object.entries(record.value)) {
+        if (
+          data.status === "success" &&
+          data.dkim_records &&
+          data.dkim_records.length > 0
+        ) {
+          foundSelectors.push(selector);
+        }
+      }
+    }
+
+    // Set status based on whether any valid DKIM records were found
+    if (foundSelectors.length > 0) {
+      statusClass = "status-success";
+      statusText = "Success";
+      statusIcon = "check-circle";
+    } else {
+      statusClass = "status-error";
+      statusText = "Error";
+      statusIcon = "exclamation-circle";
+    }
+  } else {
+    // For non-DKIM records, use the original status logic
+    statusClass = record.status === "error" ? "status-error" : "status-success";
+    statusText = record.status === "error" ? "Error" : "Success";
+    statusIcon =
+      record.status === "error" ? "exclamation-circle" : "check-circle";
+  }
 
   // Extract the actual record text based on record type
   let actualRecordText = "";
@@ -452,7 +486,11 @@ function renderDetailedRecordCard(record, index) {
       const notFoundSelectors = [];
 
       for (const [selector, data] of Object.entries(record.value)) {
-        if (data.status === "success") {
+        if (
+          data.status === "success" &&
+          data.dkim_records &&
+          data.dkim_records.length > 0
+        ) {
           foundSelectors.push(selector);
         } else {
           notFoundSelectors.push(selector);
@@ -501,6 +539,13 @@ function renderDetailedRecordCard(record, index) {
         </div>
       `;
     }
+  } else if (record.title === "DKIM" && statusClass === "status-error") {
+    recommendations = `
+      <div class="recommendation">
+        <h4>Recommendation</h4>
+        <p>No valid DKIM records were found for any of the checked selectors. To improve email authentication, you should set up DKIM for your domain using selectors specified by your email service provider.</p>
+      </div>
+    `;
   }
 
   // Parse record details for detailed view
@@ -591,6 +636,71 @@ function renderDetailedRecordCard(record, index) {
       </div>
     </div>
   `;
+}
+
+// Function to update the overview dashboard with correct DKIM status
+function updateOverviewDashboard(records) {
+  // Find the DKIM record
+  const dkimRecord = records.find((record) => record.title === "DKIM");
+
+  if (dkimRecord) {
+    // Check if any valid DKIM selectors were found
+    let validDkimFound = false;
+
+    if (!dkimRecord.value.error) {
+      for (const [selector, data] of Object.entries(dkimRecord.value)) {
+        if (
+          data.status === "success" &&
+          data.dkim_records &&
+          data.dkim_records.length > 0
+        ) {
+          validDkimFound = true;
+          break;
+        }
+      }
+    }
+
+    // Update the DKIM indicator in the overview
+    const dkimItem = document.querySelector(
+      ".score-details .score-item:nth-child(3) .score-item-value"
+    );
+    if (dkimItem) {
+      if (validDkimFound) {
+        dkimItem.innerHTML = '<i class="fas fa-check-circle"></i>';
+        dkimItem.style.color = "var(--success-color)";
+      } else {
+        dkimItem.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+        dkimItem.style.color = "var(--error-color)";
+      }
+    }
+
+    // Update the authentication score
+    updateAuthenticationScore();
+  }
+}
+
+// Function to update the authentication score based on all records
+function updateAuthenticationScore() {
+  const scoreItems = document.querySelectorAll(
+    ".score-details .score-item-value"
+  );
+  let totalItems = scoreItems.length;
+  let successItems = 0;
+
+  scoreItems.forEach((item) => {
+    if (item.innerHTML.includes("fa-check-circle")) {
+      successItems++;
+    }
+  });
+
+  const scorePercentage = Math.round((successItems / totalItems) * 100);
+  const scoreCircle = document.querySelector(".score-circle");
+  const scoreValue = document.querySelector(".score-value");
+
+  if (scoreCircle && scoreValue) {
+    scoreCircle.style.setProperty("--score-percent", `${scorePercentage}%`);
+    scoreValue.textContent = `${scorePercentage}%`;
+  }
 }
 
 // Switch tabs in record cards - Updated to force displaying only the selected tab
