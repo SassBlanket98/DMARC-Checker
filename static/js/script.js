@@ -760,7 +760,7 @@ function renderDetailedRecord(recordType, data) {
   return renderDetailedRecordCard(record, 0);
 }
 
-// Updated renderDetailedRecordCard function to fix DKIM status display
+// Updated renderDetailedRecordCard function to fix the error
 function renderDetailedRecordCard(record, index) {
   const recordId = `record-${index}`;
 
@@ -856,6 +856,11 @@ function renderDetailedRecordCard(record, index) {
     }
   }
 
+  // Escape special characters in actualRecordText for proper JavaScript use
+  const escapedText = actualRecordText
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"');
+
   // Determine recommendations based on record type and content
   let recommendations = "";
   if (record.title === "DMARC" && record.status === "success") {
@@ -902,35 +907,20 @@ function renderDetailedRecordCard(record, index) {
     `;
   }
 
-  // Parse record details for detailed view
-  let parsedDetails = "";
+  // Generate parsed details rows
+  let parsedDetailRows = "";
   if (record.parsed_record && Object.keys(record.parsed_record).length > 0) {
-    parsedDetails = `
-      <table>
-        <thead>
-          <tr>
-            <th>Attribute</th>
-            <th>Value</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${Object.entries(record.parsed_record)
-            .map(
-              ([key, value]) => `
-              <tr>
-                <td><strong>${key}</strong></td>
-                <td>${value || "N/A"}</td>
-                <td>${getExplanation(key, record.title.toLowerCase())}</td>
-              </tr>
-            `
-            )
-            .join("")}
-        </tbody>
-      </table>
-    `;
-  } else {
-    parsedDetails = "<p>No parsed details available.</p>";
+    parsedDetailRows = Object.entries(record.parsed_record)
+      .map(
+        ([key, value]) => `
+        <tr>
+          <td><strong>${key}</strong></td>
+          <td>${value || "Not specified"}</td>
+          <td>${getExplanation(key, record.title.toLowerCase())}</td>
+        </tr>
+      `
+      )
+      .join("");
   }
 
   // Generate raw data content based on record type
@@ -941,12 +931,9 @@ function renderDetailedRecordCard(record, index) {
   } else {
     // Otherwise, display the actual record data
     const copyButton = actualRecordText
-      ? `<button onclick="copyToClipboard('${actualRecordText.replace(
-          /'/g,
-          "\\'"
-        )}')" class="secondary">
-        <i class="fas fa-copy"></i> Copy
-      </button>`
+      ? `<button onclick="copyToClipboard('${escapedText}')" class="secondary">
+          <i class="fas fa-copy"></i> Copy
+        </button>`
       : "";
 
     rawDataContent = `
@@ -954,11 +941,11 @@ function renderDetailedRecordCard(record, index) {
         ${
           actualRecordText
             ? `<div class="actual-record">
-            ${actualRecordText}
-          </div>
-          <div class="action-buttons">
-            ${copyButton}
-          </div>`
+                ${actualRecordText}
+              </div>
+              <div class="action-buttons">
+                ${copyButton}
+              </div>`
             : "<p>No raw data available.</p>"
         }
       </div>
@@ -995,7 +982,23 @@ function renderDetailedRecordCard(record, index) {
         </div>
         
         <div class="tab-content" id="${recordId}-parsed" style="display: none;">
-          ${parsedDetails}
+          <div class="parsed-data">
+            <table>
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Value</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  parsedDetailRows ||
+                  "<tr><td colspan='3'>No parsed details available.</td></tr>"
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
         
         <div class="tab-content" id="${recordId}-recommendations" style="display: none;">
