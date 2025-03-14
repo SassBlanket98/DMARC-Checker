@@ -435,6 +435,51 @@ function renderDetailedRecordCard(record, index) {
   const statusIcon =
     record.status === "error" ? "exclamation-circle" : "check-circle";
 
+  // Extract the actual record text based on record type
+  let actualRecordText = "";
+  if (record.status !== "error") {
+    if (
+      record.title === "DMARC" &&
+      record.value.dmarc_records &&
+      record.value.dmarc_records.length > 0
+    ) {
+      actualRecordText = record.value.dmarc_records[0];
+    } else if (record.title === "SPF" && record.value.spf_record) {
+      actualRecordText = record.value.spf_record;
+    } else if (record.title === "DKIM") {
+      // For DKIM, show a summary of which selectors were found
+      const foundSelectors = [];
+      const notFoundSelectors = [];
+
+      for (const [selector, data] of Object.entries(record.value)) {
+        if (data.status === "success") {
+          foundSelectors.push(selector);
+        } else {
+          notFoundSelectors.push(selector);
+        }
+      }
+
+      if (foundSelectors.length > 0) {
+        actualRecordText = `Found valid records for selectors: ${foundSelectors.join(
+          ", "
+        )}`;
+      } else {
+        actualRecordText = "No valid DKIM records found for any selector";
+      }
+    } else if (record.title === "DNS") {
+      // For DNS, show a summary of found record types
+      const recordTypes = [];
+      if (record.value.parsed_record) {
+        Object.keys(record.value.parsed_record).forEach((type) => {
+          if (record.value.parsed_record[type].length > 0) {
+            recordTypes.push(type);
+          }
+        });
+      }
+      actualRecordText = `Found record types: ${recordTypes.join(", ")}`;
+    }
+  }
+
   // Determine recommendations based on record type and content
   let recommendations = "";
   if (record.title === "DMARC" && record.status === "success") {
@@ -492,10 +537,17 @@ function renderDetailedRecordCard(record, index) {
   return `
     <div class="record-card">
       <div class="record-header" onclick="toggleRecordCard('${recordId}-body')">
-        <h3>
-          <i class="fas fa-shield-alt"></i>
-          ${record.title}
-        </h3>
+        <div class="record-title-area">
+          <h3>
+            <i class="fas fa-shield-alt"></i>
+            ${record.title}
+          </h3>
+          ${
+            actualRecordText
+              ? `<div class="actual-record">${actualRecordText}</div>`
+              : ""
+          }
+        </div>
         <div class="record-controls">
           <span class="status-indicator ${statusClass}">
             <i class="fas fa-${statusIcon}"></i>
@@ -539,6 +591,33 @@ function renderDetailedRecordCard(record, index) {
       </div>
     </div>
   `;
+}
+
+// Switch tabs in record cards - Updated to force displaying only the selected tab
+function switchTab(recordId, tabName) {
+  // Hide all tab contents in this record
+  const tabContents = document.querySelectorAll(
+    `#${recordId}-body .tab-content`
+  );
+  tabContents.forEach((tab) => {
+    tab.classList.remove("active");
+    tab.style.display = "none"; // Force hide all tabs with inline style
+  });
+
+  // Remove active class from all tabs
+  const tabs = document.querySelectorAll(`#${recordId}-tabs .tab`);
+  tabs.forEach((tab) => tab.classList.remove("active"));
+
+  // Show selected tab
+  const activeTab = document.getElementById(`${recordId}-${tabName}`);
+  if (activeTab) {
+    activeTab.classList.add("active");
+    activeTab.style.display = "block"; // Force show the active tab with inline style
+  }
+
+  document
+    .querySelector(`#${recordId}-tabs .tab[data-tab="${tabName}"]`)
+    .classList.add("active");
 }
 
 // Record explanations

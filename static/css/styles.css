@@ -341,6 +341,37 @@ button.secondary:hover {
   max-height: 2000px;
 }
 
+.record-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actual-record {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  margin-top: 5px;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark-mode .actual-record {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.record-body .tab-content {
+  display: none;
+}
+
+.record-body .tab-content.active {
+  display: block;
+}
+
 .status-indicator {
   display: flex;
   align-items: center;
@@ -843,10 +874,21 @@ footer {
     width: 100%;
   }
 
+  .actual-record {
+    max-width: 100%;
+  }
+
   .record-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .record-controls {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .history-drawer {
