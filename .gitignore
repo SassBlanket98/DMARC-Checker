@@ -1,3 +1,4 @@
 dmarc_errors.log
 /__pycache__/error_handling.cpython-313.pyc
 __pycache__/
+__pycache__/dmarc_lookup.cpython-313.pyc
