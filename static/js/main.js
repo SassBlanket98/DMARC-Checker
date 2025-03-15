@@ -16,7 +16,7 @@ import {
   fixSelectorsContainerOnMobile,
   enhanceMobileToast,
   setupOrientationChangeHandler,
-  fixExportButtonSensitivity,
+  // fixExportButtonSensitivity,
 } from "./mobile-enhancements.js";
 
 // Initialize the application
@@ -44,7 +44,8 @@ document.addEventListener("DOMContentLoaded", function () {
     fixSelectorsContainerOnMobile();
     enhanceMobileToast();
     setupOrientationChangeHandler();
-    fixExportButtonSensitivity();
+    // Temporarily removed export button sensitivity fix
+    // fixExportButtonSensitivity();
   }
 
   console.log("Application initialized successfully!");

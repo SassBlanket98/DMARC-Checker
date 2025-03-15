@@ -10,7 +10,8 @@
 }
 
 /* Press and hold button styles */
-#export-btn {
+/* Temporarily removed export button styles
+ #export-btn {
   position: relative;
   overflow: hidden;
 }
@@ -27,7 +28,7 @@
 
 .hold-complete {
   background-color: var(--primary-hover) !important;
-}
+} */
 
 /* Status and feedback classes */
 .empty-state {
@@ -74,8 +75,10 @@ p.note {
     margin-top: 15px;
   }
 
-  #export-btn {
+  /* Temporarily removed
+    #export-btn {
     margin-top: 10px;
     padding: 16px 20px;
-  }
+  } 
+  */
 }

@@ -344,7 +344,9 @@ export function setupOrientationChangeHandler() {
   });
 }
 
+// Temporarily removed export button sensitivity fix
 // Export the export button sensitivity fix
+/* 
 export function fixExportButtonSensitivity() {
   if (!isMobileDevice()) return;
 
@@ -469,3 +471,4 @@ export function fixExportButtonSensitivity() {
     indicator.style.width = "0%";
   });
 }
+*/

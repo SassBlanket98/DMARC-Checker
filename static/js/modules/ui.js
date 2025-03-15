@@ -71,11 +71,11 @@ export function setupEventListeners() {
     checkBtn.addEventListener("click", checkRecord);
   }
 
-  // Export button
-  const exportBtn = document.getElementById("export-btn");
-  if (exportBtn) {
-    exportBtn.addEventListener("click", handleExport);
-  }
+  // // Export button
+  // const exportBtn = document.getElementById("export-btn");
+  // if (exportBtn) {
+  //   exportBtn.addEventListener("click", handleExport);
+  // }
 
   // Enter key handler for searching
   document.addEventListener("keydown", function (event) {
@@ -186,8 +186,10 @@ export function handleDocumentClick(event) {
   }
 }
 
-// Export button handler
+// Export button handler - kept for future implementation
+/*
 export function handleExport() {
   // To be implemented - this would generate a PDF or other export format
   showToast("Exporting functionality to be implemented", "info");
 }
+*/
