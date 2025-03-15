@@ -1421,3 +1421,61 @@ button.small {
 .dark-mode .error-message {
   background-color: rgba(255, 255, 255, 0.05);
 }
+
+/* Record preview in collapsed state */
+.collapsed-record {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.85rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dark-mode .collapsed-record {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Make sure the expanded version maintains proper styling */
+.expanded-record,
+.actual-record {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  padding: 12px 15px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  margin-top: 5px;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.dark-mode .expanded-record,
+.dark-mode .actual-record {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.main-record-preview {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  padding: 12px 15px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  margin: 10px 0 15px 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.dark-mode .main-record-preview {
+  background-color: rgba(255, 255, 255, 0.05);
+}

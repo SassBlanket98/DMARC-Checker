@@ -952,19 +952,20 @@ function renderDetailedRecords(records) {
     .join("");
 }
 
-// Updated renderDetailedRecord function
 function renderDetailedRecord(recordType, data) {
-  if (recordType.toUpperCase() === "DKIM") {
-    const record = {
-      title: "DKIM",
-      value: data,
-      parsed_record: data.parsed_record || {},
-      status: data.error ? "error" : "success",
-    };
-    return renderDetailedRecordCard(record, 0);
+  // For DMARC records, extract the actual record text to display
+  let recordPreview = "";
+  if (
+    recordType.toUpperCase() === "DMARC" &&
+    data.dmarc_records &&
+    data.dmarc_records.length > 0
+  ) {
+    recordPreview = `<div class="main-record-preview">${data.dmarc_records[0]}</div>`;
+  } else if (recordType.toUpperCase() === "SPF" && data.spf_record) {
+    recordPreview = `<div class="main-record-preview">${data.spf_record}</div>`;
   }
 
-  // Standard handling for other record types
+  // Format the record as if it were a standard record
   const record = {
     title: recordType.toUpperCase(),
     value: data,
@@ -972,7 +973,381 @@ function renderDetailedRecord(recordType, data) {
     status: data.error ? "error" : "success",
   };
 
-  return renderDetailedRecordCard(record, 0);
+  // Wrap the record in a container with the preview at the top level
+  return `
+    <div class="record-container">
+      ${recordPreview}
+      ${renderDetailedRecordCard(record, 0)}
+    </div>
+  `;
+}
+
+function renderDetailedRecordCard(record, index) {
+  const recordId = `record-${index}`;
+
+  // Determine the correct status for DKIM records
+  let statusClass, statusText, statusIcon;
+
+  if (record.title === "DKIM") {
+    // For DKIM, check if any selectors were found successfully
+    const foundSelectors = [];
+    const notFoundSelectors = [];
+
+    if (!record.value.error) {
+      for (const [selector, data] of Object.entries(record.value)) {
+        if (
+          selector !== "overall_status" &&
+          selector !== "recommendations" &&
+          selector !== "suggestions"
+        ) {
+          if (
+            data.status === "success" &&
+            data.dkim_records &&
+            data.dkim_records.length > 0
+          ) {
+            foundSelectors.push(selector);
+          } else {
+            notFoundSelectors.push(selector);
+          }
+        }
+      }
+    }
+
+    // Set status based on whether any valid DKIM records were found
+    if (foundSelectors.length > 0) {
+      statusClass = "status-success";
+      statusText = "Success";
+      statusIcon = "check-circle";
+    } else {
+      statusClass = "status-error";
+      statusText = "Error";
+      statusIcon = "exclamation-circle";
+    }
+  } else {
+    // For non-DKIM records, use the original status logic
+    statusClass = record.status === "error" ? "status-error" : "status-success";
+    statusText = record.status === "error" ? "Error" : "Success";
+    statusIcon =
+      record.status === "error" ? "exclamation-circle" : "check-circle";
+  }
+
+  // Extract the actual record text to display in collapsed state
+  let actualRecordText = "";
+  if (
+    record.title === "DMARC" &&
+    record.value.dmarc_records &&
+    record.value.dmarc_records.length > 0
+  ) {
+    actualRecordText = record.value.dmarc_records[0];
+  } else if (record.title === "SPF" && record.value.spf_record) {
+    actualRecordText = record.value.spf_record;
+  } else if (record.title === "DNS") {
+    // For DNS, show a summary of found record types
+    const recordTypes = [];
+    if (record.value.parsed_record) {
+      Object.keys(record.value.parsed_record).forEach((type) => {
+        if (record.value.parsed_record[type].length > 0) {
+          recordTypes.push(type);
+        }
+      });
+    }
+    actualRecordText = `Found record types: ${recordTypes.join(", ")}`;
+  }
+
+  // Escape special characters in actualRecordText for proper JavaScript use
+  const escapedText = actualRecordText
+    ? actualRecordText.replace(/'/g, "\\'").replace(/"/g, '\\"')
+    : "";
+
+  // Create the record preview to show in collapsed state
+  const recordPreview = actualRecordText
+    ? `<div class="actual-record collapsed-record">${actualRecordText}</div>`
+    : "";
+
+  // Generate raw data content based on record type
+  let rawDataContent = "";
+  if (record.title === "DKIM") {
+    rawDataContent = renderDkimRecord(record.value, errorState.lastDomain);
+  } else if (record.status === "error") {
+    rawDataContent = renderErrorMessage(record.value);
+  } else {
+    // Special handling for DKIM records to show detailed information
+    if (record.title === "DKIM") {
+      // Extract found and not found selectors
+      const foundSelectors = [];
+      const notFoundSelectors = [];
+      const selectorDetails = [];
+
+      // Process each selector to categorize them and prepare detailed information
+      for (const [selector, data] of Object.entries(record.value)) {
+        if (
+          selector !== "overall_status" &&
+          selector !== "recommendations" &&
+          selector !== "suggestions"
+        ) {
+          if (
+            data.status === "success" &&
+            data.dkim_records &&
+            data.dkim_records.length > 0
+          ) {
+            foundSelectors.push(selector);
+
+            // Add detailed information for each found selector
+            data.dkim_records.forEach((record, idx) => {
+              selectorDetails.push(`
+                <div class="dkim-selector-detail success">
+                  <div class="selector-name">
+                    <i class="fas fa-check-circle"></i> 
+                    Selector: <strong>${selector}</strong>
+                  </div>
+                  <div class="selector-record">
+                    <pre>${record}</pre>
+                    <button onclick="copyToClipboard(\`${record
+                      .replace(/'/g, "\\'")
+                      .replace(/"/g, '\\"')}\`)" class="secondary small">
+                      <i class="fas fa-copy"></i> Copy
+                    </button>
+                  </div>
+                </div>
+              `);
+            });
+          } else {
+            notFoundSelectors.push(selector);
+
+            // Add detailed information for each not found selector
+            const errorMessage = data.error || "No DKIM record found";
+            selectorDetails.push(`
+              <div class="dkim-selector-detail error">
+                <div class="selector-name">
+                  <i class="fas fa-times-circle"></i> 
+                  Selector: <strong>${selector}</strong>
+                </div>
+                <div class="selector-error">
+                  <p>${errorMessage}</p>
+                  ${
+                    data.error_code
+                      ? `<div class="error-code">Error code: ${data.error_code}</div>`
+                      : ""
+                  }
+                </div>
+              </div>
+            `);
+          }
+        }
+      }
+
+      // Generate summary text
+      let summaryText = "";
+      if (foundSelectors.length > 0) {
+        summaryText += `<p class="dkim-summary success"><i class="fas fa-check-circle"></i> Found valid DKIM records for selectors: <strong>${foundSelectors.join(
+          ", "
+        )}</strong></p>`;
+      }
+
+      if (notFoundSelectors.length > 0) {
+        summaryText += `<p class="dkim-summary error"><i class="fas fa-times-circle"></i> No valid DKIM records found for selectors: <strong>${notFoundSelectors.join(
+          ", "
+        )}</strong></p>`;
+      }
+
+      // Add suggestions if available
+      let suggestionsHtml = "";
+      if (record.value.suggestions && record.value.suggestions.length > 0) {
+        const suggestionsItems = record.value.suggestions
+          .map((suggestion) => `<li>${suggestion}</li>`)
+          .join("");
+        suggestionsHtml = `
+          <div class="dkim-suggestions">
+            <p><i class="fas fa-lightbulb"></i> Suggestions:</p>
+            <ul>${suggestionsItems}</ul>
+          </div>
+        `;
+      }
+
+      // Combine all elements
+      rawDataContent = `
+        <div class="dkim-details">
+          ${summaryText}
+          
+          <div class="dkim-selectors-container">
+            <h4>Selector Details:</h4>
+            ${selectorDetails.join("")}
+          </div>
+          
+          ${suggestionsHtml}
+        </div>
+      `;
+    } else {
+      // For non-DKIM records, use the original content generation logic but with modifications
+      const copyButton = actualRecordText
+        ? `<button onclick="copyToClipboard('${escapedText}')" class="secondary">
+            <i class="fas fa-copy"></i> Copy
+          </button>`
+        : "";
+
+      rawDataContent = `
+      <div class="record-data">
+        ${
+          actualRecordText
+            ? `<div class="actual-record expanded-record">
+                ${actualRecordText}
+              </div>
+              <div class="action-buttons">
+                ${copyButton}
+              </div>`
+            : "<p>No raw data available.</p>"
+        }
+      </div>
+    `;
+    }
+  }
+
+  // Generate parsed details rows (existing code)
+  let parsedDetailRows = "";
+  if (record.parsed_record && Object.keys(record.parsed_record).length > 0) {
+    // Special handling for SPF record includes which might be arrays
+    if (record.title === "SPF") {
+      parsedDetailRows = Object.entries(record.parsed_record)
+        .map(([key, value]) => {
+          // Handle arrays (like for 'include' directives)
+          let displayValue = value;
+          if (Array.isArray(value)) {
+            displayValue = value.join(", ");
+          }
+
+          // For 'include:domain.com' keys, display the original key in the table
+          let displayKey = key;
+          if (key.startsWith("include:")) {
+            displayKey = key; // Keep the full key with domain
+          }
+
+          return `
+        <tr>
+          <td><strong>${displayKey}</strong></td>
+          <td>${displayValue || "Not specified"}</td>
+          <td>${getExplanation(key, record.title.toLowerCase())}</td>
+        </tr>
+        `;
+        })
+        .join("");
+    } else {
+      // Standard handling for other record types
+      parsedDetailRows = Object.entries(record.parsed_record)
+        .map(
+          ([key, value]) => `
+        <tr>
+          <td><strong>${key}</strong></td>
+          <td>${value || "Not specified"}</td>
+          <td>${getExplanation(key, record.title.toLowerCase())}</td>
+        </tr>
+      `
+        )
+        .join("");
+    }
+  }
+
+  // Determine recommendations based on record type and content
+  let recommendations = "";
+  if (record.title === "DMARC" && record.status === "success") {
+    const dmarcData = record.value.parsed_record || {};
+    const p = dmarcData.p || "";
+    if (p === "none") {
+      recommendations = `
+        <div class="recommendation">
+          <h4>Recommendation</h4>
+          <p>Your DMARC policy is set to 'none', which only monitors emails without taking action on failures. For better security, consider upgrading to 'quarantine' or 'reject' once you've verified that legitimate emails are passing DMARC checks.</p>
+        </div>
+      `;
+    }
+  } else if (record.title === "SPF" && record.status === "success") {
+    if (record.value.spf_record && record.value.spf_record.includes("~all")) {
+      recommendations = `
+        <div class="recommendation">
+          <h4>Recommendation</h4>
+          <p>Your SPF record uses a soft fail (~all) mechanism. For stronger protection against email spoofing, consider using a hard fail (-all) once you've verified all legitimate email sources are included in your SPF record.</p>
+        </div>
+      `;
+    }
+  } else if (record.title === "DKIM" && statusClass === "status-error") {
+    recommendations = `
+      <div class="recommendation">
+        <h4>Recommendation</h4>
+        <p>No valid DKIM records were found for any of the checked selectors. To improve email authentication, you should set up DKIM for your domain using selectors specified by your email service provider.</p>
+      </div>
+    `;
+  }
+
+  // Show suggestions if available (from server response)
+  if (record.value.suggestions && record.value.suggestions.length > 0) {
+    const suggestionsHtml = record.value.suggestions
+      .map((suggestion) => `<li>${suggestion}</li>`)
+      .join("");
+    recommendations += `
+      <div class="recommendation">
+        <h4>Server Suggestions</h4>
+        <ul class="suggestions-list">
+          ${suggestionsHtml}
+        </ul>
+      </div>
+    `;
+  }
+
+  // Complete HTML for the record card with proper tab structure and the record preview
+  return `
+    <div class="record-card">
+      <div class="record-header" onclick="toggleRecordCard('${recordId}-body')">
+        <div class="record-title-area">
+          <h3>
+            <i class="fas fa-file-alt"></i>
+            ${record.title}
+          </h3>
+          <div class="status-indicator ${statusClass}">
+            <i class="fas fa-${statusIcon}"></i>
+            ${statusText}
+          </div>
+          ${recordPreview}
+        </div>
+        <div class="record-controls">
+          <i class="fas fa-chevron-down expand-icon"></i>
+        </div>
+      </div>
+      <div class="record-body" id="${recordId}-body">
+        <div class="tabs" id="${recordId}-tabs">
+          <div class="tab active" data-tab="raw" onclick="switchTab('${recordId}', 'raw')">Raw Data</div>
+          <div class="tab" data-tab="parsed" onclick="switchTab('${recordId}', 'parsed')">Parsed Details</div>
+          <div class="tab" data-tab="recommendations" onclick="switchTab('${recordId}', 'recommendations')">Recommendations</div>
+        </div>
+        
+        <div class="tab-content active" id="${recordId}-raw" style="display: block;">
+          ${rawDataContent}
+        </div>
+        
+        <div class="tab-content" id="${recordId}-parsed" style="display: none;">
+          <div class="parsed-data">
+            <table>
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Value</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  parsedDetailRows ||
+                  "<tr><td colspan='3'>No parsed details available.</td></tr>"
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="tab-content" id="${recordId}-recommendations" style="display: none;">
+          ${recommendations || "<p>No recommendations available.</p>"}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // Enhanced renderDetailedRecordCard function with improved DKIM record display
@@ -1024,6 +1399,39 @@ function renderDetailedRecordCard(record, index) {
     statusIcon =
       record.status === "error" ? "exclamation-circle" : "check-circle";
   }
+
+  // Extract the actual record text to display in collapsed state
+  let actualRecordText = "";
+  if (
+    record.title === "DMARC" &&
+    record.value.dmarc_records &&
+    record.value.dmarc_records.length > 0
+  ) {
+    actualRecordText = record.value.dmarc_records[0];
+  } else if (record.title === "SPF" && record.value.spf_record) {
+    actualRecordText = record.value.spf_record;
+  } else if (record.title === "DNS") {
+    // For DNS, show a summary of found record types
+    const recordTypes = [];
+    if (record.value.parsed_record) {
+      Object.keys(record.value.parsed_record).forEach((type) => {
+        if (record.value.parsed_record[type].length > 0) {
+          recordTypes.push(type);
+        }
+      });
+    }
+    actualRecordText = `Found record types: ${recordTypes.join(", ")}`;
+  }
+
+  // Escape special characters in actualRecordText for proper JavaScript use
+  const escapedText = actualRecordText
+    ? actualRecordText.replace(/'/g, "\\'").replace(/"/g, '\\"')
+    : "";
+
+  // Create the record preview to show in collapsed state
+  const recordPreview = actualRecordText
+    ? `<div class="actual-record collapsed-record">${actualRecordText}</div>`
+    : "";
 
   // Generate raw data content based on record type
   let rawDataContent = "";
