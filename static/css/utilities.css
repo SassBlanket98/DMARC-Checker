@@ -1,0 +1,81 @@
+/* utilities.css - Helper classes and utility styles */
+
+/* Visibility helpers */
+.hidden {
+  display: none !important;
+}
+
+.visible {
+  display: block !important;
+}
+
+/* Press and hold button styles */
+#export-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.hold-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  width: 0%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1;
+}
+
+.hold-complete {
+  background-color: var(--primary-hover) !important;
+}
+
+/* Status and feedback classes */
+.empty-state {
+  padding: 20px;
+  text-align: center;
+  color: #777;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  margin: 15px 0;
+}
+
+.dark-mode .empty-state {
+  background-color: rgba(255, 255, 255, 0.02);
+  color: #aaa;
+}
+
+/* Visual feedback for button press on mobile */
+.button-active {
+  background-color: rgba(178, 34, 34, 0.2) !important;
+  transform: scale(0.98);
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin-left: 5px;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+p.note {
+  font-size: 0.9rem;
+  padding: 10px;
+  background-color: rgba(52, 152, 219, 0.1);
+  border-left: 3px solid var(--info-color);
+  margin-top: 15px;
+}
+
+/* Mobile optimization extras */
+@media (max-width: 768px) {
+  .button-group {
+    margin-top: 15px;
+  }
+
+  #export-btn {
+    margin-top: 10px;
+    padding: 16px 20px;
+  }
+}

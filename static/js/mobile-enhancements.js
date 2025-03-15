@@ -1,8 +1,8 @@
-// Mobile Enhancement Functions
-// Add these to your script.js file
+// mobile-enhancements.js - Mobile device detection and enhancements
+// Converted to ES module format with proper exports
 
-// Detect if the device is mobile
-function isMobileDevice() {
+// Export this function so it can be imported in main.js
+export function isMobileDevice() {
   return (
     window.innerWidth <= 768 ||
     "ontouchstart" in window ||
@@ -11,27 +11,29 @@ function isMobileDevice() {
   );
 }
 
-// Mobile-specific initializations
-function initMobileEnhancements() {
-  if (isMobileDevice()) {
-    // Adjust history drawer behavior for mobile
-    adjustHistoryDrawerForMobile();
+// Export the main mobile enhancement initialization function
+export function initMobileEnhancements() {
+  if (!isMobileDevice()) return;
 
-    // Add touch-specific handlers
-    addTouchHandlers();
+  // Adjust history drawer behavior for mobile
+  adjustHistoryDrawerForMobile();
 
-    // Optimize toast position based on scroll
-    optimizeToastPosition();
+  // Add touch-specific handlers
+  addTouchHandlers();
 
-    // Add double-tap prevention (common mobile issue)
-    preventDoubleTapZoom();
-  }
+  // Optimize toast position based on scroll
+  optimizeToastPosition();
+
+  // Add double-tap prevention (common mobile issue)
+  preventDoubleTapZoom();
 }
 
 // Adjust history drawer for mobile
 function adjustHistoryDrawerForMobile() {
   // Add swipe to close functionality for the history drawer
   const historyDrawer = document.getElementById("history-drawer");
+  if (!historyDrawer) return;
+
   let touchStartX = 0;
 
   historyDrawer.addEventListener(
@@ -60,7 +62,10 @@ function adjustHistoryDrawerForMobile() {
 
     // If swiped far enough, close drawer
     if (diff > 50) {
-      closeHistoryDrawer();
+      // Use dynamic import to access the history module
+      import("./modules/history.js").then((historyModule) => {
+        historyModule.closeHistoryDrawer();
+      });
     }
 
     // Reset the transform
@@ -76,7 +81,9 @@ function adjustHistoryDrawerForMobile() {
         !historyDrawer.contains(e.target) &&
         e.target.id !== "history-link"
       ) {
-        closeHistoryDrawer();
+        import("./modules/history.js").then((historyModule) => {
+          historyModule.closeHistoryDrawer();
+        });
       }
     },
     { passive: true }
@@ -165,8 +172,10 @@ function preventDoubleTapZoom() {
   });
 }
 
-// Enhance modals for mobile
-function enhanceModalsForMobile() {
+// Export the modal enhancement function
+export function enhanceModalsForMobile() {
+  if (!isMobileDevice()) return;
+
   // Allow scrolling inside modals but not on background
   const modals = document.querySelectorAll(".modal");
 
@@ -186,17 +195,23 @@ function enhanceModalsForMobile() {
     backdrop.addEventListener("touchend", function (e) {
       if (e.target === this) {
         if (this.id === "help-modal") {
-          closeHelpModal();
+          import("./modules/modals.js").then((modalsModule) => {
+            modalsModule.closeHelpModal();
+          });
         } else if (this.id === "score-details-modal") {
-          closeScoreDetailsModal();
+          import("./modules/modals.js").then((modalsModule) => {
+            modalsModule.closeScoreDetailsModal();
+          });
         }
       }
     });
   });
 }
 
-// Add resize handlers for table display on small screens
-function handleTableResponsiveness() {
+// Export the table responsiveness function
+export function handleTableResponsiveness() {
+  if (!isMobileDevice()) return;
+
   // Function to adjust table column display based on screen width
   const adjustTableColumns = () => {
     const tables = document.querySelectorAll(".parsed-data table");
@@ -222,38 +237,71 @@ function handleTableResponsiveness() {
   window.addEventListener("resize", adjustTableColumns);
 }
 
-// Add to the initialization function
-document.addEventListener("DOMContentLoaded", function () {
-  initApp();
-  initScoreMethodology();
+// Export the mobile toast enhancement function
+export function enhanceMobileToast() {
+  if (!isMobileDevice()) return;
 
-  // Initialize mobile enhancements
-  initMobileEnhancements();
-  enhanceModalsForMobile();
-  handleTableResponsiveness();
-});
+  // Create a globally accessible wrapper function for mobile toast
+  window.showMobileToast = function (message, type = "info", duration = 5000) {
+    // Import the toast module when needed
+    import("./modules/toast.js").then((toastModule) => {
+      // Call the original toast function
+      toastModule.showToast(message, type, duration);
 
-// Update the showToast function to consider mobile positioning
-const originalShowToast = showToast;
-showToast = function (message, type = "info", duration = 5000) {
-  // Call the original function
-  originalShowToast(message, type, duration);
+      // Then apply mobile-specific styling
+      setTimeout(() => {
+        const toastContainer = document.querySelector(".toast-container");
+        if (toastContainer) {
+          toastContainer.style.left = "50%";
+          toastContainer.style.transform = "translateX(-50%)";
+          toastContainer.style.width = "90%";
+          toastContainer.style.maxWidth = "350px";
+        }
+      }, 10); // Small delay to ensure the toast container exists
+    });
+  };
 
-  // Then adjust position if on mobile
-  if (isMobileDevice()) {
-    const toastContainer = document.querySelector(".toast-container");
-    if (toastContainer) {
-      // Position in the center bottom of screen
-      toastContainer.style.left = "50%";
-      toastContainer.style.transform = "translateX(-50%)";
-      toastContainer.style.width = "90%";
-      toastContainer.style.maxWidth = "350px";
-    }
-  }
-};
+  // Add a MutationObserver to detect when toasts are added to the DOM
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.addedNodes.length) {
+        mutation.addedNodes.forEach((node) => {
+          // Check if the added node is a toast container
+          if (node.classList && node.classList.contains("toast-container")) {
+            // Apply mobile styling
+            node.style.left = "50%";
+            node.style.transform = "translateX(-50%)";
+            node.style.width = "90%";
+            node.style.maxWidth = "350px";
+          }
 
-// Fix the issue with selectors display on mobile
-function fixSelectorsContainerOnMobile() {
+          // Check if the added node is a toast
+          if (node.classList && node.classList.contains("toast")) {
+            // If we're adding a toast to an existing container
+            const container = node.parentElement;
+            if (container && container.classList.contains("toast-container")) {
+              container.style.left = "50%";
+              container.style.transform = "translateX(-50%)";
+              container.style.width = "90%";
+              container.style.maxWidth = "350px";
+            }
+          }
+        });
+      }
+    });
+  });
+
+  // Start observing the document body for toast-related changes
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+}
+
+// Export the selectors container function
+export function fixSelectorsContainerOnMobile() {
+  if (!isMobileDevice()) return;
+
   const recordTypeSelect = document.getElementById("recordType");
   const selectorsContainer = document.getElementById("selectors-container");
 
@@ -264,51 +312,42 @@ function fixSelectorsContainerOnMobile() {
     }
 
     // Ensure selectors container is properly sized on mobile
-    if (isMobileDevice()) {
-      selectorsContainer.style.maxWidth = "100%";
+    selectorsContainer.style.maxWidth = "100%";
 
-      // Make selector tags more touch-friendly
-      const selectorTags = document.querySelectorAll(".selector-tag");
-      selectorTags.forEach((tag) => {
-        tag.style.padding = "8px 12px";
-        tag.style.marginBottom = "5px";
-      });
-    }
+    // Make selector tags more touch-friendly
+    const selectorTags = document.querySelectorAll(".selector-tag");
+    selectorTags.forEach((tag) => {
+      tag.style.padding = "8px 12px";
+      tag.style.marginBottom = "5px";
+    });
   }
 }
 
-// Initialize when DOM is ready
-document.addEventListener("DOMContentLoaded", function () {
-  // Call our original initializations
-  initApp();
-  initScoreMethodology();
+// Export orientation change handler
+export function setupOrientationChangeHandler() {
+  if (!isMobileDevice()) return;
 
-  // Then call our mobile enhancements
-  if (isMobileDevice()) {
-    initMobileEnhancements();
-    enhanceModalsForMobile();
-    handleTableResponsiveness();
-    fixSelectorsContainerOnMobile();
-  }
-});
+  window.addEventListener("orientationchange", function () {
+    // Slight delay to let the browser finish orientation change
+    setTimeout(() => {
+      handleTableResponsiveness();
 
-// Handle orientation changes more gracefully
-window.addEventListener("orientationchange", function () {
-  // Slight delay to let the browser finish orientation change
-  setTimeout(() => {
-    handleTableResponsiveness();
+      // Reposition any open modals
+      const openModals = document.querySelectorAll(".modal-backdrop.open");
+      openModals.forEach((modal) => {
+        const modalElement = modal.querySelector(".modal");
+        if (modalElement) {
+          modalElement.style.maxHeight = window.innerHeight * 0.8 + "px";
+        }
+      });
+    }, 300);
+  });
+}
 
-    // Reposition any open modals
-    const openModals = document.querySelectorAll(".modal-backdrop.open");
-    openModals.forEach((modal) => {
-      modal.querySelector(".modal").style.maxHeight =
-        window.innerHeight * 0.8 + "px";
-    });
-  }, 300);
-});
+// Export the export button sensitivity fix
+export function fixExportButtonSensitivity() {
+  if (!isMobileDevice()) return;
 
-// Fix for oversensitive export button on mobile devices
-function fixExportButtonSensitivity() {
   const exportBtn = document.getElementById("export-btn");
   if (!exportBtn) return;
 
@@ -372,7 +411,11 @@ function fixExportButtonSensitivity() {
 
         // Show confirmation dialog
         if (confirm("Export results as PDF?")) {
-          handleExport();
+          import("./modules/ui.js").then((uiModule) => {
+            if (uiModule.handleExport) {
+              uiModule.handleExport();
+            }
+          });
         }
 
         // Reset after a moment

@@ -1,0 +1,295 @@
+/* records.css - Styles for record cards and record display */
+
+.results {
+  margin-top: 2rem;
+}
+
+/* Record Cards */
+.record-card {
+  background: var(--card-background);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.record-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.record-body {
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.record-body.expanded {
+  padding: 20px;
+  max-height: 2000px;
+}
+
+.record-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actual-record {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  margin-top: 5px;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark-mode .actual-record {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.collapsed-record {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.85rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dark-mode .collapsed-record {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.expanded-record,
+.actual-record {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  padding: 12px 15px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  margin-top: 5px;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.dark-mode .expanded-record,
+.dark-mode .actual-record {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.status-success {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: var(--success-color);
+}
+
+.status-error {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: var(--error-color);
+}
+
+.status-warning {
+  background-color: rgba(243, 156, 18, 0.2);
+  color: var(--warning-color);
+}
+
+.status-info {
+  background-color: rgba(52, 152, 219, 0.2);
+  color: var(--info-color);
+}
+
+/* Record Tab System */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 20px;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.dark-mode .tabs {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.tab {
+  padding: 12px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.tab.active {
+  border-bottom: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  background-color: var(--card-background);
+}
+
+.tab:hover {
+  background-color: rgba(178, 34, 34, 0.05);
+}
+
+.tab-content {
+  display: none !important; /* Use !important to override any inline styles */
+}
+
+.tab-content.active {
+  display: block !important; /* Use !important to override the default hidden state */
+}
+
+/* Record Data Display */
+.record-data pre {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 15px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.dark-mode .record-data pre {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Parsed Data Tables */
+.parsed-data {
+  margin-top: 20px;
+}
+
+.parsed-data table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.parsed-data th,
+.parsed-data td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.parsed-data th {
+  font-weight: 600;
+  color: var(--primary-color);
+  background-color: rgba(178, 34, 34, 0.05);
+}
+
+.parsed-data tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.dark-mode .parsed-data tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.parsed-data tr:hover {
+  background-color: rgba(178, 34, 34, 0.05);
+}
+
+.parsed-data td:first-child {
+  font-weight: 500;
+  width: 15%;
+}
+
+.parsed-data td:nth-child(2) {
+  width: 35%;
+  font-family: "Consolas", "Monaco", monospace;
+  word-break: break-all;
+}
+
+.parsed-data td:last-child {
+  width: 50%;
+  color: #666;
+  font-style: italic;
+}
+
+.dark-mode .parsed-data td:last-child {
+  color: #aaa;
+}
+
+/* Recommendations */
+.recommendation {
+  background-color: rgba(52, 152, 219, 0.1);
+  border-left: 4px solid var(--info-color);
+  margin: 15px 0;
+  padding: 15px;
+  border-radius: 6px;
+}
+
+.recommendation h4 {
+  color: var(--info-color);
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.recommendation p {
+  line-height: 1.5;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.recommendation.high-priority {
+  border-left: 4px solid var(--error-color);
+}
+
+.recommendation.medium-priority {
+  border-left: 4px solid var(--warning-color);
+}
+
+.recommendation.low-priority {
+  border-left: 4px solid var(--info-color);
+}
+
+.selector-info-row {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.selector-info {
+  padding: 10px !important;
+  color: #3498db;
+  font-style: italic;
+}
