@@ -14,22 +14,21 @@ const resultBox = document.getElementById("result");
 const overviewContainer = document.getElementById("overview-container");
 
 // Recent domains for autocomplete
-const recentDomains = [
-  "example.com",
-  "google.com",
-  "microsoft.com",
-  "apple.com",
-  "amazon.com",
-];
+// const recentDomains = [
+//   "example.com",
+//   "google.com",
+//   "microsoft.com",
+//   "apple.com",
+//   "amazon.com",
+// ];
 
-// Default DKIM selectors
+// Default DKIM selectors - core set covering most common services
 const selectorsData = [
-  "default",
   "google",
   "selector1",
   "selector2",
-  "email",
-  "dkim1",
+  "amazonses",
+  "default",
 ];
 
 // Error handling state
@@ -125,6 +124,15 @@ function handleRecordTypeChange() {
 // Add selector tag function
 function addSelectorTag(selector) {
   if (!selector) return;
+
+  // Check if this selector already exists
+  const existingSelectors = Array.from(
+    document.querySelectorAll(".selector-tag")
+  ).map((tag) => tag.textContent.trim().replace(/\s*×.*$/, ""));
+
+  if (existingSelectors.includes(selector)) {
+    return; // Skip adding if it already exists
+  }
 
   const tag = document.createElement("div");
   tag.className = "selector-tag";
@@ -737,6 +745,14 @@ window.switchTab = function (recordId, tabName) {
     return;
   }
 
+  // Check if this is a DMARC or SPF record (which only has 2 tabs)
+  const recordHeader = document.querySelector(
+    `#${recordId}-body`
+  ).previousElementSibling;
+  const recordTitle = recordHeader.querySelector("h3").textContent.trim();
+  const isSimplifiedView =
+    recordTitle.includes("DMARC") || recordTitle.includes("SPF");
+
   // Hide all tab contents in this record
   const tabContents = document.querySelectorAll(`#${recordId} .tab-content`);
   if (tabContents.length === 0) {
@@ -775,7 +791,6 @@ window.switchTab = function (recordId, tabName) {
     console.error(`Tab button for ${tabName} not found`);
   }
 };
-
 // Copy record data to clipboard
 window.copyToClipboard = function (text) {
   navigator.clipboard
@@ -1075,7 +1090,7 @@ function handleNetworkError(error) {
   };
 }
 
-// Enhanced DKIM record render function
+// Enhanced DKIM raw data display with visual breakdown
 function renderDkimRecord(data, domain) {
   // Handle case where there's a general error (not selector-specific)
   if (data.error) {
@@ -1109,21 +1124,21 @@ function renderDkimRecord(data, domain) {
       // Add detailed information for each found selector
       value.dkim_records.forEach((record) => {
         selectorDetails.push(`
-            <div class="dkim-selector-detail success">
-              <div class="selector-name">
-                <i class="fas fa-check-circle"></i> 
-                Selector: <strong>${key}</strong>
-              </div>
-              <div class="selector-record">
-                <pre>${record}</pre>
-                <button onclick="copyToClipboard(\`${record
-                  .replace(/'/g, "\\'")
-                  .replace(/"/g, '\\"')}\`)" class="secondary small">
-                  <i class="fas fa-copy"></i> Copy
-                </button>
-              </div>
+          <div class="dkim-selector-detail success">
+            <div class="selector-name">
+              <i class="fas fa-check-circle"></i> 
+              Selector: <strong>${key}</strong>
             </div>
-          `);
+            <div class="selector-record">
+              <pre>${record}</pre>
+              <button onclick="copyToClipboard(\`${record
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"')}\`)" class="secondary small">
+                <i class="fas fa-copy"></i> Copy
+              </button>
+            </div>
+          </div>
+        `);
       });
     }
     // Handle failed selectors
@@ -1133,33 +1148,90 @@ function renderDkimRecord(data, domain) {
       // Add detailed information for each not found selector
       const errorMessage = value.error || "No DKIM record found";
       selectorDetails.push(`
-          <div class="dkim-selector-detail error">
-            <div class="selector-name">
-              <i class="fas fa-times-circle"></i> 
-              Selector: <strong>${key}</strong>
-            </div>
-            <div class="selector-error">
-              <p>${errorMessage}</p>
-              ${
-                value.error_code
-                  ? `<div class="error-code">Error code: ${value.error_code}</div>`
-                  : ""
-              }
-              ${
-                value.suggestions && value.suggestions.length > 0
-                  ? `<div class="selector-suggestions">
-                  <p><strong>Suggestions:</strong></p>
-                  <ul>${value.suggestions
-                    .map((s) => `<li>${s}</li>`)
-                    .join("")}</ul>
-                </div>`
-                  : ""
-              }
-            </div>
+        <div class="dkim-selector-detail error">
+          <div class="selector-name">
+            <i class="fas fa-times-circle"></i> 
+            Selector: <strong>${key}</strong>
           </div>
-        `);
+          <div class="selector-error">
+            <p>${errorMessage}</p>
+            ${
+              value.error_code
+                ? `<div class="error-code">Error code: ${value.error_code}</div>`
+                : ""
+            }
+            ${
+              value.suggestions && value.suggestions.length > 0
+                ? `<div class="selector-suggestions">
+                <p><strong>Suggestions:</strong></p>
+                <ul>${value.suggestions
+                  .map((s) => `<li>${s}</li>`)
+                  .join("")}</ul>
+              </div>`
+                : ""
+            }
+          </div>
+        </div>
+      `);
     }
   }
+
+  // Generate the enhanced visual summary section (similar to DMARC and SPF)
+  const visualSummary = `
+    <div class="dkim-visual-summary">
+      <div class="policy-indicator">
+        ${
+          foundSelectors.length > 0
+            ? '<i class="fas fa-shield-alt"></i>'
+            : '<i class="fas fa-exclamation-triangle"></i>'
+        }
+        <div>${
+          foundSelectors.length > 0
+            ? '<span class="policy-strong">DKIM Configured</span>'
+            : '<span class="policy-none">DKIM Not Found</span>'
+        }
+        </div>
+      </div>
+      <div class="dkim-settings">
+        <div class="dkim-setting">
+          <i class="fas ${
+            foundSelectors.length > 0
+              ? "fa-check-circle setting-enabled"
+              : "fa-times-circle setting-disabled"
+          }"></i>
+          <span>Found selectors: ${
+            foundSelectors.length > 0 ? foundSelectors.join(", ") : "None"
+          }</span>
+        </div>
+        <div class="dkim-setting">
+          <i class="fas ${
+            foundSelectors.length > 1
+              ? "fa-check-circle setting-enabled"
+              : "fa-info-circle"
+          }"></i>
+          <span>Multiple selectors: ${
+            foundSelectors.length > 1
+              ? "Yes (" + foundSelectors.length + ")"
+              : "No"
+          }</span>
+        </div>
+        <div class="dkim-setting">
+          <i class="fas ${
+            notFoundSelectors.length > 0
+              ? "fa-exclamation-triangle setting-warning"
+              : "fa-info-circle"
+          }"></i>
+          <span>Failed selectors: ${
+            notFoundSelectors.length > 0 ? notFoundSelectors.join(", ") : "None"
+          }</span>
+        </div>
+        <div class="dkim-setting">
+          <i class="fas fa-info-circle"></i>
+          <span>Domain: ${domain}</span>
+        </div>
+      </div>
+    </div>
+  `;
 
   // Generate summary text
   let summaryText = `<h4>DKIM Records for ${domain}</h4>`;
@@ -1183,47 +1255,49 @@ function renderDkimRecord(data, domain) {
       .map((suggestion) => `<li>${suggestion}</li>`)
       .join("");
     suggestionsHtml = `
-        <div class="dkim-suggestions">
-          <p><i class="fas fa-lightbulb"></i> Suggestions:</p>
-          <ul>${suggestionsItems}</ul>
-        </div>
-      `;
+      <div class="dkim-suggestions">
+        <p><i class="fas fa-lightbulb"></i> Suggestions:</p>
+        <ul>${suggestionsItems}</ul>
+      </div>
+    `;
   }
 
   // Combine all elements for the complete content
   return `
-      <div class="dkim-details">
-        ${summaryText}
-        
-        <div class="dkim-selectors-container">
-          <h4>Selector Details:</h4>
-          ${
-            selectorDetails.length > 0
-              ? selectorDetails.join("")
-              : `
-            <div class="empty-state">
-              <p>No DKIM selectors were checked successfully.</p>
-              <p>Try adding different selectors based on your email service provider.</p>
-            </div>
-          `
-          }
-        </div>
-        
-        ${suggestionsHtml}
-        
-        <div class="dkim-common-selectors">
-          <h4>Common DKIM Selectors by Provider:</h4>
-          <ul>
-            <li><strong>Google Workspace:</strong> google, 20160929, 20161025</li>
-            <li><strong>Microsoft 365:</strong> selector1, selector2</li>
-            <li><strong>Zoho:</strong> zoho</li>
-            <li><strong>Amazon SES:</strong> amazonses</li>
-            <li><strong>Mailchimp:</strong> k1, k2, k3</li>
-            <li><strong>Other:</strong> default, dkim, mail</li>
-          </ul>
-        </div>
+    <div class="dkim-details">
+      ${summaryText}
+      
+      ${visualSummary}
+      
+      <div class="dkim-selectors-container">
+        <h4>Selector Details:</h4>
+        ${
+          selectorDetails.length > 0
+            ? selectorDetails.join("")
+            : `
+          <div class="empty-state">
+            <p>No DKIM selectors were checked successfully.</p>
+            <p>Try adding different selectors based on your email service provider.</p>
+          </div>
+        `
+        }
       </div>
-    `;
+      
+      ${suggestionsHtml}
+      
+      <div class="dkim-common-selectors">
+        <h4>Common DKIM Selectors by Provider:</h4>
+        <ul>
+          <li><strong>Google Workspace:</strong> google, 20160929, 20161025</li>
+          <li><strong>Microsoft 365:</strong> selector1, selector2</li>
+          <li><strong>Zoho:</strong> zoho</li>
+          <li><strong>Amazon SES:</strong> amazonses</li>
+          <li><strong>Mailchimp:</strong> k1, k2, k3</li>
+          <li><strong>Other:</strong> default, dkim, mail</li>
+        </ul>
+      </div>
+    </div>
+  `;
 }
 
 // Updated checkRecord function to pass record type to error handler
@@ -1929,6 +2003,7 @@ function renderDetailedRecordCard(record, index) {
       record.status === "error" ? "exclamation-circle" : "check-circle";
   }
 
+  // Update this section in the renderDetailedRecordCard function in script.js
   // Extract the actual record text to display in collapsed state
   let actualRecordText = "";
   if (
@@ -1939,6 +2014,37 @@ function renderDetailedRecordCard(record, index) {
     actualRecordText = record.value.dmarc_records[0];
   } else if (record.title === "SPF" && record.value.spf_record) {
     actualRecordText = record.value.spf_record;
+  } else if (record.title === "DKIM") {
+    // Add new code for DKIM summary text
+    const foundSelectors = [];
+
+    // Loop through all properties to find successful selectors
+    for (const [key, value] of Object.entries(record.value)) {
+      // Skip non-selector keys
+      if (
+        key === "overall_status" ||
+        key === "recommendations" ||
+        key === "suggestions"
+      ) {
+        continue;
+      }
+
+      // Add selector name if it has valid records
+      if (
+        value.status === "success" &&
+        value.dkim_records &&
+        value.dkim_records.length > 0
+      ) {
+        foundSelectors.push(key);
+      }
+    }
+
+    // Create summary text showing found selectors
+    if (foundSelectors.length > 0) {
+      actualRecordText = `Found selectors: ${foundSelectors.join(", ")}`;
+    } else {
+      actualRecordText = "No valid DKIM selectors found";
+    }
   } else if (record.title === "DNS") {
     // For DNS, show a summary of found record types
     const recordTypes = [];
@@ -1963,44 +2069,112 @@ function renderDetailedRecordCard(record, index) {
   // Generate parsed details rows (existing code remains the same)
   let parsedDetailRows = "";
   if (record.parsed_record && Object.keys(record.parsed_record).length > 0) {
-    // Special handling for SPF record includes which might be arrays
+    // Existing code for DMARC and SPF records...
     if (record.title === "SPF") {
-      parsedDetailRows = Object.entries(record.parsed_record)
-        .map(([key, value]) => {
-          // Handle arrays (like for 'include' directives)
-          let displayValue = value;
-          if (Array.isArray(value)) {
-            displayValue = value.join(", ");
-          }
-
-          // For 'include:domain.com' keys, display the original key in the table
-          let displayKey = key;
-          if (key.startsWith("include:")) {
-            displayKey = key; // Keep the full key with domain
-          }
-
-          return `
-        <tr>
-          <td><strong>${displayKey}</strong></td>
-          <td>${displayValue || "Not specified"}</td>
-          <td>${getExplanation(key, record.title.toLowerCase())}</td>
-        </tr>
-        `;
-        })
-        .join("");
+      // Your existing SPF handling code...
     } else {
       // Standard handling for other record types
       parsedDetailRows = Object.entries(record.parsed_record)
         .map(
           ([key, value]) => `
-        <tr>
-          <td><strong>${key}</strong></td>
-          <td>${value || "Not specified"}</td>
-          <td>${getExplanation(key, record.title.toLowerCase())}</td>
-        </tr>
-      `
+      <tr>
+        <td><strong>${key}</strong></td>
+        <td>${value || "Not specified"}</td>
+        <td>${getExplanation(key, record.title.toLowerCase())}</td>
+      </tr>
+    `
         )
         .join("");
+    }
+  } else if (record.title === "DKIM") {
+    // Special handling for DKIM records which have a different structure
+    // Find the first successful selector with parsed records
+    const foundSelector = Object.entries(record.value).find(
+      ([key, value]) =>
+        key !== "overall_status" &&
+        key !== "recommendations" &&
+        key !== "suggestions" &&
+        value.status === "success" &&
+        value.parsed_records &&
+        value.parsed_records.length > 0
+    );
+
+    if (foundSelector) {
+      const [selectorName, selectorData] = foundSelector;
+      // Use the first parsed record from this selector
+      const parsedRecord = selectorData.parsed_records[0];
+
+      if (parsedRecord) {
+        parsedDetailRows = Object.entries(parsedRecord)
+          .map(
+            ([key, value]) => `
+          <tr>
+            <td><strong>${key}</strong></td>
+            <td>${value || "Not specified"}</td>
+            <td>${getExplanation(key, "dkim")}</td>
+          </tr>
+        `
+          )
+          .join("");
+
+        // Add a row to show which selector this data is from
+        parsedDetailRows =
+          `
+        <tr class="selector-info-row">
+          <td colspan="3" class="selector-info">
+            <i class="fas fa-info-circle"></i> 
+            Showing details for selector: <strong>${selectorName}</strong>
+          </td>
+        </tr>
+      ` + parsedDetailRows;
+      }
+    } else {
+      // Alternative approach: Extract DKIM data from all successful selectors
+      const allParsedData = {};
+
+      // Loop through all selectors and collect parsed data
+      Object.entries(record.value).forEach(([key, value]) => {
+        if (
+          key !== "overall_status" &&
+          key !== "recommendations" &&
+          key !== "suggestions" &&
+          value.status === "success" &&
+          value.dkim_records &&
+          value.dkim_records.length > 0
+        ) {
+          // Try to parse the record text - DKIM records are often in tag=value format
+          const recordText = value.dkim_records[0].replace(/"/g, "");
+          const parts = recordText.split(";");
+
+          parts.forEach((part) => {
+            const trimmedPart = part.trim();
+            if (trimmedPart.includes("=")) {
+              const [tagName, tagValue] = trimmedPart.split("=", 2);
+              allParsedData[tagName.trim()] = tagValue.trim();
+            }
+          });
+        }
+      });
+
+      if (Object.keys(allParsedData).length > 0) {
+        parsedDetailRows = Object.entries(allParsedData)
+          .map(
+            ([key, value]) => `
+          <tr>
+            <td><strong>${key}</strong></td>
+            <td>${value || "Not specified"}</td>
+            <td>${getExplanation(key, "dkim")}</td>
+          </tr>
+        `
+          )
+          .join("");
+      } else {
+        parsedDetailRows = `
+        <tr>
+          <td colspan="3">No parsed DKIM record details available.</td>
+        </tr>
+      `;
+      }
     }
   }
 
@@ -2050,62 +2224,80 @@ function renderDetailedRecordCard(record, index) {
     `;
   }
 
+  // Check if this is a DMARC or SPF record (which will only have 2 tabs)
+  const isSimplifiedView = record.title === "DMARC" || record.title === "SPF";
+
+  // Create the tabs HTML based on record type
+  const tabsHtml = isSimplifiedView
+    ? `<div class="tabs" id="${recordId}-tabs">
+      <div class="tab active" data-tab="raw" onclick="switchTab('${recordId}', 'raw')">Data</div>
+      <div class="tab" data-tab="recommendations" onclick="switchTab('${recordId}', 'recommendations')">Recommendations</div>
+    </div>`
+    : `<div class="tabs" id="${recordId}-tabs">
+      <div class="tab active" data-tab="raw" onclick="switchTab('${recordId}', 'raw')">Data</div>
+      <div class="tab" data-tab="parsed" onclick="switchTab('${recordId}', 'parsed')">Parsed Details</div>
+      <div class="tab" data-tab="recommendations" onclick="switchTab('${recordId}', 'recommendations')">Recommendations</div>
+    </div>`;
+
+  // Create the content HTML
+  // For DMARC and SPF, don't include the parsed details tab content
+  const parsedTabHtml = isSimplifiedView
+    ? ""
+    : `<div class="tab-content" id="${recordId}-parsed">
+      <div class="parsed-data">
+        <table>
+          <thead>
+            <tr>
+              <th>Attribute</th>
+              <th>Value</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              parsedDetailRows ||
+              "<tr><td colspan='3'>No parsed details available.</td></tr>"
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+
   // Complete HTML for the record card with proper tab structure
   return `
-    <div class="record-card">
-      <div class="record-header" onclick="toggleRecordCard('${recordId}-body')">
-        <div class="record-title-area">
-          <h3>
-            <i class="fas fa-file-alt"></i>
-            ${record.title}
-          </h3>
-          <div class="status-indicator ${statusClass}">
-            <i class="fas fa-${statusIcon}"></i>
-            ${statusText}
-          </div>
-          ${recordPreview}
+  <div class="record-card">
+    <div class="record-header" onclick="toggleRecordCard('${recordId}-body')">
+      <!-- existing header code stays the same -->
+      <div class="record-title-area">
+        <h3>
+          <i class="fas fa-file-alt"></i>
+          ${record.title}
+        </h3>
+        <div class="status-indicator ${statusClass}">
+          <i class="fas fa-${statusIcon}"></i>
+          ${statusText}
         </div>
-        <div class="record-controls">
-          <i class="fas fa-chevron-down expand-icon"></i>
-        </div>
+        ${recordPreview}
       </div>
-      <div class="record-body" id="${recordId}-body">
-        <div class="tabs" id="${recordId}-tabs">
-          <div class="tab active" data-tab="raw" onclick="switchTab('${recordId}', 'raw')">Raw Data</div>
-          <div class="tab" data-tab="parsed" onclick="switchTab('${recordId}', 'parsed')">Parsed Details</div>
-          <div class="tab" data-tab="recommendations" onclick="switchTab('${recordId}', 'recommendations')">Recommendations</div>
-        </div>
-        
-        <div class="tab-content active" id="${recordId}-raw">
-          ${rawDataContent}
-        </div>
-        
-        <div class="tab-content" id="${recordId}-parsed">
-          <div class="parsed-data">
-            <table>
-              <thead>
-                <tr>
-                  <th>Attribute</th>
-                  <th>Value</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  parsedDetailRows ||
-                  "<tr><td colspan='3'>No parsed details available.</td></tr>"
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-        
-        <div class="tab-content" id="${recordId}-recommendations">
-          ${recommendations || "<p>No recommendations available.</p>"}
-        </div>
+      <div class="record-controls">
+        <i class="fas fa-chevron-down expand-icon"></i>
       </div>
     </div>
-  `;
+    <div class="record-body" id="${recordId}-body">
+      ${tabsHtml}
+      
+      <div class="tab-content active" id="${recordId}-raw">
+        ${rawDataContent}
+      </div>
+      
+      ${parsedTabHtml}
+      
+      <div class="tab-content" id="${recordId}-recommendations">
+        ${recommendations || "<p>No recommendations available.</p>"}
+      </div>
+    </div>
+  </div>
+`;
 }
 
 // Function to update the overview dashboard with correct DKIM status
@@ -2356,7 +2548,12 @@ function getExplanation(key, recordType) {
 }
 
 // Initialize application when DOM is loaded
-document.addEventListener("DOMContentLoaded", initApp);
+document.addEventListener("DOMContentLoaded", function () {
+  // Only initialize if selectors haven't been added yet
+  if (document.querySelectorAll(".selector-tag").length === 0) {
+    initApp();
+  }
+});
 
 // Score Details Modal
 let scoreDetailsModal;

@@ -2298,3 +2298,13 @@ button.small {
     padding: 16px 20px;
   }
 }
+
+.selector-info-row {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.selector-info {
+  padding: 10px !important;
+  color: #3498db;
+  font-style: italic;
+}
