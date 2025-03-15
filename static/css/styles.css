@@ -1168,3 +1168,256 @@ p.note {
 .recommendation.low-priority {
   border-left: 4px solid var(--info-color);
 }
+
+/* Enhanced DKIM record display styles */
+.dkim-details {
+  padding: 15px 0;
+}
+
+.dkim-summary {
+  margin-bottom: 15px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dkim-summary.success {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: var(--success-color);
+}
+
+.dkim-summary.error {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--error-color);
+}
+
+.dkim-selectors-container {
+  margin-top: 20px;
+}
+
+.dkim-selectors-container h4 {
+  margin-bottom: 12px;
+  color: var(--text-color);
+  font-size: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+}
+
+.dkim-selector-detail {
+  border-left: 4px solid var(--border-color);
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 0 4px 4px 0;
+}
+
+.dark-mode .dkim-selector-detail {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.dkim-selector-detail.success {
+  border-left-color: var(--success-color);
+}
+
+.dkim-selector-detail.error {
+  border-left-color: var(--error-color);
+}
+
+.selector-name {
+  margin-bottom: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selector-name i {
+  font-size: 0.9rem;
+}
+
+.dkim-selector-detail.success .selector-name i {
+  color: var(--success-color);
+}
+
+.dkim-selector-detail.error .selector-name i {
+  color: var(--error-color);
+}
+
+.selector-record {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  padding: 10px;
+  position: relative;
+}
+
+.dark-mode .selector-record {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.selector-record pre {
+  margin: 0;
+  padding: 0;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.selector-record button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.selector-error {
+  color: var(--error-color);
+  padding: 10px;
+  background-color: rgba(231, 76, 60, 0.05);
+  border-radius: 4px;
+}
+
+.dkim-suggestions {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: rgba(52, 152, 219, 0.1);
+  border-radius: 6px;
+  border-left: 4px solid var(--info-color);
+}
+
+.dkim-suggestions p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: var(--info-color);
+}
+
+.dkim-suggestions ul {
+  margin: 0;
+  padding-left: 25px;
+}
+
+.dkim-suggestions li {
+  margin-bottom: 5px;
+}
+
+/* Additional utility classes */
+button.small {
+  font-size: 0.75rem !important;
+  padding: 4px 8px !important;
+}
+
+.empty-state {
+  padding: 20px;
+  text-align: center;
+  color: #777;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  margin: 15px 0;
+}
+
+.dark-mode .empty-state {
+  background-color: rgba(255, 255, 255, 0.02);
+  color: #aaa;
+}
+
+/* Enhanced DKIM error display styles */
+.dkim-error-details {
+  margin: 15px 0;
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+}
+
+.dark-mode .dkim-error-details {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.dkim-error-details p {
+  margin-bottom: 10px;
+}
+
+.dkim-error-details ul {
+  margin: 10px 0;
+  padding-left: 25px;
+}
+
+.dkim-error-details li {
+  margin-bottom: 5px;
+}
+
+.dkim-selectors-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 0;
+}
+
+.dkim-selector-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--error-color);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+/* Improved selector tags display in error messages */
+.selector-list {
+  margin: 10px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selector-list-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  background-color: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: var(--error-color);
+}
+
+.selector-list-item i {
+  margin-right: 5px;
+}
+
+/* Additional error description styling */
+.error-description {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+}
+
+.dark-mode .error-description {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.error-title {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.error-message {
+  font-family: "Consolas", "Monaco", monospace;
+  margin-top: 5px;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  overflow-x: auto;
+}
+
+.dark-mode .error-message {
+  background-color: rgba(255, 255, 255, 0.05);
+}

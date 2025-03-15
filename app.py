@@ -1,5 +1,6 @@
 import asyncio
 import sys
+import logging
 
 # Windows-specific setup
 if sys.platform == 'win32':
@@ -17,6 +18,8 @@ from error_handling import (
     handle_dkim_error,
     DomainError
 )
+
+logging.getLogger('werkzeug').setLevel(logging.INFO)
 
 # Configure enhanced logging
 configure_enhanced_logging()
@@ -309,4 +312,5 @@ def server_error(e):
 
 # Main Entry Point
 if __name__ == '__main__':
+    # print("\n * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)")
     app.run(debug=True)
