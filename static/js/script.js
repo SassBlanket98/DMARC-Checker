@@ -947,18 +947,6 @@ function renderDetailedRecords(records) {
 }
 
 function renderDetailedRecord(recordType, data) {
-  // For DMARC records, extract the actual record text to display
-  let recordPreview = "";
-  if (
-    recordType.toUpperCase() === "DMARC" &&
-    data.dmarc_records &&
-    data.dmarc_records.length > 0
-  ) {
-    recordPreview = `<div class="main-record-preview">${data.dmarc_records[0]}</div>`;
-  } else if (recordType.toUpperCase() === "SPF" && data.spf_record) {
-    recordPreview = `<div class="main-record-preview">${data.spf_record}</div>`;
-  }
-
   // Format the record as if it were a standard record
   const record = {
     title: recordType.toUpperCase(),
@@ -967,10 +955,9 @@ function renderDetailedRecord(recordType, data) {
     status: data.error ? "error" : "success",
   };
 
-  // Wrap the record in a container with the preview at the top level
+  // Wrap the record in a container WITHOUT the preview at the top level
   return `
     <div class="record-container">
-      ${recordPreview}
       ${renderDetailedRecordCard(record, 0)}
     </div>
   `;
