@@ -1889,3 +1889,374 @@ button.small {
 .visible {
   display: block !important;
 }
+
+/* Mobile Optimization Styles */
+/* Add these to your existing styles.css file */
+
+/* Improved Media Queries for Mobile Optimization */
+
+/* Base responsive adjustments for all mobile devices */
+@media (max-width: 768px) {
+  /* Header and Navigation Adjustments */
+  .header-container {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .app-title {
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+  }
+
+  /* Fix logo positioning for mobile */
+  .logo img {
+    position: static;
+    display: block;
+    margin: 0 auto 0.5rem;
+    max-width: 100px;
+    height: auto;
+    padding: 0;
+  }
+
+  /* Improved navigation menu */
+  nav {
+    width: 100%;
+  }
+
+  nav ul {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0;
+  }
+
+  nav ul li {
+    margin: 5px;
+  }
+
+  nav ul li a {
+    display: block;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  /* Form and Input Adjustments */
+  .input-group {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  input,
+  select {
+    padding: 14px; /* Larger tap target */
+    font-size: 16px; /* Prevent iOS zoom on focus */
+  }
+
+  /* Button Adjustments */
+  .button-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 15px;
+  }
+
+  button {
+    width: 100%;
+    padding: 14px; /* Larger tap target */
+    min-height: 48px; /* Ensure minimum touch target size */
+    justify-content: center;
+  }
+
+  /* Record Display Adjustments */
+  .record-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 15px;
+  }
+
+  .record-controls {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .actual-record,
+  .collapsed-record {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.8rem;
+  }
+
+  .main-record-preview,
+  .expanded-record {
+    font-size: 0.8rem;
+    padding: 10px;
+    overflow-x: auto;
+  }
+
+  /* Tab System Adjustments */
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 5px;
+    display: flex;
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* Parsed Data Table Adjustments */
+  .parsed-data {
+    overflow-x: auto;
+  }
+
+  .parsed-data table {
+    min-width: 100%;
+  }
+
+  .parsed-data th,
+  .parsed-data td {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  .parsed-data td:first-child {
+    width: 25%;
+  }
+
+  .parsed-data td:nth-child(2) {
+    width: 35%;
+  }
+
+  .parsed-data td:last-child {
+    width: 40%;
+  }
+
+  /* Modal Adjustments */
+  .modal {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+  }
+
+  .modal-body {
+    padding: 15px;
+  }
+
+  /* History Drawer Adjustments */
+  .history-drawer {
+    width: 85%;
+    right: -85%;
+  }
+
+  /* Score Section Adjustments */
+  .score-details {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .score-circle {
+    width: 110px;
+    height: 110px;
+  }
+
+  .score-value {
+    font-size: 1.6rem;
+  }
+
+  .score-letter {
+    width: 35px;
+    height: 35px;
+    font-size: 1.3rem;
+  }
+
+  /* Recommendation Sections */
+  .recommendation {
+    padding: 12px;
+  }
+
+  .recommendation h4 {
+    font-size: 1rem;
+  }
+
+  /* Toast Notifications for Mobile */
+  .toast-container {
+    top: auto;
+    bottom: 20px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 350px;
+  }
+
+  .toast {
+    min-width: 100%;
+    transform: translateY(50px);
+  }
+
+  .toast-visible {
+    transform: translateY(0);
+  }
+
+  .toast-hiding {
+    transform: translateY(50px);
+  }
+}
+
+/* Specific adjustments for extra small devices */
+@media (max-width: 480px) {
+  .methodology-breakdown {
+    grid-template-columns: 1fr;
+  }
+
+  .app-title {
+    font-size: 1.2rem;
+  }
+
+  .record-title-area {
+    width: 100%;
+  }
+
+  .collapsed-record {
+    max-width: 100%;
+    font-size: 0.75rem;
+    padding: 8px;
+  }
+
+  /* Improve table display on very small screens */
+  .parsed-data td:last-child {
+    display: none; /* Hide description column on very small screens */
+  }
+
+  .parsed-data th:last-child {
+    display: none;
+  }
+
+  .parsed-data td:first-child {
+    width: 35%;
+  }
+
+  .parsed-data td:nth-child(2) {
+    width: 65%;
+  }
+
+  /* Adjust DMARC/SPF visual summaries */
+  .dmarc-visual-summary,
+  .spf-visual-summary {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dmarc-settings,
+  .spf-settings {
+    grid-template-columns: 1fr;
+  }
+
+  /* Better score display on tiny screens */
+  .score-details {
+    gap: 10px;
+  }
+
+  .score-item {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Fix modals on very small screens */
+  .modal-section h3 {
+    font-size: 1.1rem;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase tap target sizes for touch devices */
+  button,
+  .tab,
+  .selector-tag,
+  .toast-close,
+  .modal-close,
+  .drawer-close,
+  .record-header,
+  nav ul li a {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Remove hover states that don't work well on touch */
+  .tab:hover {
+    background-color: transparent;
+  }
+
+  /* Improve scrolling in tables and overflowing elements */
+  .parsed-data {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure scrollable modals */
+  .modal-body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Fix for fixed position elements in iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  .toast-container,
+  .modal-backdrop,
+  .history-drawer {
+    position: absolute;
+    height: 100vh; /* Use vh as a fallback */
+    height: -webkit-fill-available;
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-width: 926px) and (orientation: landscape) {
+  /* Adjust for landscape mobile views */
+  .header-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .app-title {
+    margin-bottom: 0;
+    margin-right: 20px;
+  }
+
+  .logo img {
+    max-width: 80px;
+  }
+
+  /* Two-column layout for forms in landscape */
+  .input-group {
+    flex-direction: row;
+  }
+
+  .button-group {
+    flex-direction: row;
+  }
+
+  /* Make modals smaller in landscape to avoid needing to scroll */
+  .modal {
+    max-height: 75vh;
+  }
+}
