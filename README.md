@@ -6,13 +6,10 @@ A comprehensive tool for checking and analyzing email authentication records (DM
 
 - [Overview](#-overview)
 - [Features](#-features)
-- [Demo](#-demo)
-- [Installation](#-installation)
 - [Usage](#-usage)
 - [Architecture](#-architecture)
 - [Scoring Methodology](#-scoring-methodology)
 - [API Documentation](#-api-documentation)
-- [Contributing](#-contributing)
 - [License](#-license)
 - [Acknowledgements](#-acknowledgements)
 
@@ -34,14 +31,6 @@ Email authentication is crucial for protecting domains from spoofing, phishing, 
 - **Dark/Light Mode**: Choose your preferred theme
 - **Search History**: Keep track of your previous lookups
 - **Error Handling**: Intelligent error detection with helpful suggestions
-
-## 🎬 Demo
-
-![DMARC Checker Demo](demo.gif)
-
-Live demo available at: [https://dmarc-checker.example.com](https://dmarc-checker.example.com)
-
-## 📥 Installation
 
 ### Prerequisites
 
