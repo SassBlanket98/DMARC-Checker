@@ -312,5 +312,5 @@ def server_error(e):
 
 # Main Entry Point
 if __name__ == '__main__':
-    # print("\n * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)")
+    print("\n * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)")
     app.run(debug=True)
