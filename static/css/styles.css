@@ -2260,3 +2260,9 @@ button.small {
     max-height: 75vh;
   }
 }
+
+/* Visual feedback for button press on mobile */
+.button-active {
+  background-color: rgba(178, 34, 34, 0.2) !important;
+  transform: scale(0.98);
+}

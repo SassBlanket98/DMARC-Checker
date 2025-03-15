@@ -306,3 +306,96 @@ window.addEventListener("orientationchange", function () {
     });
   }, 300);
 });
+
+// Fix for oversensitive export button on mobile devices
+function fixExportButtonSensitivity() {
+  const exportBtn = document.getElementById("export-btn");
+  if (!exportBtn) return;
+
+  // Variables to track touch events
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+  let isTouchMove = false;
+
+  // Remove the original click handler to prevent double triggering
+  const originalClickHandler = exportBtn.onclick;
+  exportBtn.onclick = null;
+
+  // Add touchstart handler
+  exportBtn.addEventListener(
+    "touchstart",
+    function (e) {
+      // Store the starting position and time
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+      isTouchMove = false;
+    },
+    { passive: true }
+  );
+
+  // Add touchmove handler to detect swiping
+  exportBtn.addEventListener(
+    "touchmove",
+    function (e) {
+      // Calculate distance moved
+      const touchX = e.touches[0].clientX;
+      const touchY = e.touches[0].clientY;
+      const distX = Math.abs(touchX - touchStartX);
+      const distY = Math.abs(touchY - touchStartY);
+
+      // If moved more than the threshold, mark as a move not a tap
+      if (distX > 10 || distY > 10) {
+        isTouchMove = true;
+      }
+    },
+    { passive: true }
+  );
+
+  // Add touchend handler
+  exportBtn.addEventListener("touchend", function (e) {
+    // Calculate if it was a short tap, not a long press or swipe
+    const touchEndTime = Date.now();
+    const touchDuration = touchEndTime - touchStartTime;
+
+    // Only trigger the export if it was a deliberate tap:
+    // 1. Touch didn't move much (not a swipe)
+    // 2. Touch duration was short (not a long press)
+    // 3. Touch ended on the same element (didn't slide off)
+    if (!isTouchMove && touchDuration < 300) {
+      // Add a small visual feedback
+      this.classList.add("button-active");
+
+      // Show confirmation dialog on mobile
+      if (confirm("Export results as PDF?")) {
+        // Call the original export function
+        handleExport();
+      }
+
+      // Remove visual feedback after a short delay
+      setTimeout(() => {
+        this.classList.remove("button-active");
+      }, 200);
+    }
+  });
+
+  // Add a touchcancel handler to reset state
+  exportBtn.addEventListener(
+    "touchcancel",
+    function () {
+      isTouchMove = false;
+    },
+    { passive: true }
+  );
+}
+
+// Add this to your initialization functions
+document.addEventListener("DOMContentLoaded", function () {
+  // Your existing initialization code
+
+  // Add our new function to handle the export button
+  if (isMobileDevice()) {
+    fixExportButtonSensitivity();
+  }
+});
