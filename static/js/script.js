@@ -103,9 +103,6 @@ function initApp() {
       checkRecord();
     }
   });
-
-  // Add CSS for toast notifications
-  addToastStyles();
 }
 
 // Toggle dark mode
@@ -184,16 +181,16 @@ function handleDomainInput() {
         div.textContent = domain;
         div.addEventListener("click", function () {
           domainInput.value = domain;
-          domainSuggestions.style.display = "none";
+          domainSuggestions.classList.remove("visible");
         });
         domainSuggestions.appendChild(div);
       });
-      domainSuggestions.style.display = "block";
+      domainSuggestions.classList.add("visible");
     } else {
-      domainSuggestions.style.display = "none";
+      domainSuggestions.classList.remove("visible");
     }
   } else {
-    domainSuggestions.style.display = "none";
+    domainSuggestions.classList.remove("visible");
   }
 }
 
@@ -203,7 +200,7 @@ function handleDocumentClick(event) {
     !domainInput.contains(event.target) &&
     !domainSuggestions.contains(event.target)
   ) {
-    domainSuggestions.style.display = "none";
+    domainSuggestions.classList.remove("visible");
   }
 }
 
@@ -308,12 +305,10 @@ window.switchTab = function (recordId, tabName) {
     );
     altTabContents.forEach((tab) => {
       tab.classList.remove("active");
-      tab.style.display = "none";
     });
   } else {
     tabContents.forEach((tab) => {
       tab.classList.remove("active");
-      tab.style.display = "none";
     });
   }
 
@@ -325,7 +320,6 @@ window.switchTab = function (recordId, tabName) {
   const activeTab = document.getElementById(`${recordId}-${tabName}`);
   if (activeTab) {
     activeTab.classList.add("active");
-    activeTab.style.display = "block";
   } else {
     console.error(`Tab ${tabName} for ${recordId} not found`);
   }
@@ -801,7 +795,7 @@ async function checkRecord() {
   errorState.lastRecordType = recordType;
 
   // Reset overview container
-  overviewContainer.style.display = "none";
+  overviewContainer.classList.add("hidden");
 
   // Validate domain input
   const validation = validateDomain(domain);
@@ -867,7 +861,7 @@ async function checkRecord() {
     // Handle success response
     if (recordType === "overview") {
       // Display overview score container
-      overviewContainer.style.display = "block";
+      overviewContainer.classList.remove("hidden");
 
       // Render records
       resultBox.innerHTML = renderDetailedRecords(data.records);
@@ -1649,11 +1643,11 @@ function renderDetailedRecordCard(record, index) {
           <div class="tab" data-tab="recommendations" onclick="switchTab('${recordId}', 'recommendations')">Recommendations</div>
         </div>
         
-        <div class="tab-content active" id="${recordId}-raw" style="display: block;">
+        <div class="tab-content active" id="${recordId}-raw">
           ${rawDataContent}
         </div>
         
-        <div class="tab-content" id="${recordId}-parsed" style="display: none;">
+        <div class="tab-content" id="${recordId}-parsed">
           <div class="parsed-data">
             <table>
               <thead>
@@ -1673,7 +1667,7 @@ function renderDetailedRecordCard(record, index) {
           </div>
         </div>
         
-        <div class="tab-content" id="${recordId}-recommendations" style="display: none;">
+        <div class="tab-content" id="${recordId}-recommendations">
           ${recommendations || "<p>No recommendations available.</p>"}
         </div>
       </div>
@@ -1689,12 +1683,12 @@ function updateOverviewDashboard(records) {
   // Calculate the authentication score
   const scoreData = window.ScoreMethodology.calculateAuthScore(records);
 
-  // Update the score circle
+  // Update the score circle with CSS variable
   const scoreCircle = document.querySelector(".score-circle");
   const scoreValue = document.querySelector(".score-value");
 
   if (scoreCircle && scoreValue) {
-    // Update the score percentage
+    // Update the score percentage using CSS variable
     scoreCircle.style.setProperty(
       "--score-percent",
       `${scoreData.overallScore}%`
@@ -1740,10 +1734,10 @@ function updateOverviewDashboard(records) {
     if (componentItem) {
       if (data.status === "success") {
         componentItem.innerHTML = '<i class="fas fa-check-circle"></i>';
-        componentItem.style.color = "var(--success-color)";
+        componentItem.className = "score-item-value success";
       } else {
         componentItem.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-        componentItem.style.color = "var(--error-color)";
+        componentItem.className = "score-item-value error";
       }
     }
   });
@@ -1902,14 +1896,6 @@ function getExplanation(key, recordType) {
 
 // Initialize application when DOM is loaded
 document.addEventListener("DOMContentLoaded", initApp);
-
-// Add toast styles
-function addToastStyles() {
-  // This function is referenced in initApp but was never defined
-  // It should create or ensure toast notification styles are in place
-  // We'll implement it to do nothing since the styles are already in the CSS file
-  console.log("Toast styles initialized");
-}
 
 // Score Details Modal
 let scoreDetailsModal;

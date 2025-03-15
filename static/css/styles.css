@@ -628,8 +628,8 @@ button.secondary:hover {
   height: 120px;
   border-radius: 50%;
   background: conic-gradient(
-    var(--success-color) 0% var(--score-percent),
-    #ddd var(--score-percent) 100%
+    var(--success-color) 0% var(--score-percent, 0%),
+    #ddd var(--score-percent, 0%) 100%
   );
   display: flex;
   justify-content: center;
@@ -684,6 +684,18 @@ button.secondary:hover {
   font-weight: 600;
 }
 
+.score-item-value.success {
+  color: var(--success-color);
+}
+
+.score-item-value.error {
+  color: var(--error-color);
+}
+
+.score-item-value.warning {
+  color: var(--warning-color);
+}
+
 .score-letter {
   position: absolute;
   right: 20px;
@@ -700,27 +712,27 @@ button.secondary:hover {
 
 .score-letter-A {
   background-color: rgba(46, 204, 113, 0.2);
-  color: var (--success-color);
+  color: var(--success-color);
 }
 
 .score-letter-B {
   background-color: rgba(46, 204, 113, 0.15);
-  color: var (--success-color);
+  color: var(--success-color);
 }
 
 .score-letter-C {
   background-color: rgba(243, 156, 18, 0.2);
-  color: var (--warning-color);
+  color: var(--warning-color);
 }
 
 .score-letter-D {
   background-color: rgba(231, 76, 60, 0.15);
-  color: var (--error-color);
+  color: var(--error-color);
 }
 
 .score-letter-F {
   background-color: rgba(231, 76, 60, 0.2);
-  color: var (--error-color);
+  color: var(--error-color);
 }
 
 /* Issues and recommendations */
@@ -758,29 +770,29 @@ button.secondary:hover {
 
 .issue-critical {
   background-color: rgba(231, 76, 60, 0.1);
-  border-left: 4px solid var (--error-color);
+  border-left: 4px solid var(--error-color);
 }
 
 .issue-critical .issue-icon {
-  color: var (--error-color);
+  color: var(--error-color);
 }
 
 .issue-warning {
   background-color: rgba(243, 156, 18, 0.1);
-  border-left: 4px solid var (--warning-color);
+  border-left: 4px solid var(--warning-color);
 }
 
 .issue-warning .issue-icon {
-  color: var (--warning-color);
+  color: var(--warning-color);
 }
 
 .issue-info {
   background-color: rgba(52, 152, 219, 0.1);
-  border-left: 4px solid var (--info-color);
+  border-left: 4px solid var(--info-color);
 }
 
 .issue-info .issue-icon {
-  color: var (--info-color);
+  color: var(--info-color);
 }
 
 /* History drawer */
@@ -1478,4 +1490,394 @@ button.small {
 
 .dark-mode .main-record-preview {
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Toast notification styles (previously handled inline in JS) */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  min-width: 250px;
+  max-width: 400px;
+  padding: 12px 15px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--card-background);
+  border-left: 4px solid var(--info-color);
+  opacity: 0;
+  transform: translateX(50px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.toast-error {
+  border-left-color: var(--error-color);
+}
+
+.toast-warning {
+  border-left-color: var(--warning-color);
+}
+
+.toast-success {
+  border-left-color: var(--success-color);
+}
+
+.toast-info {
+  border-left-color: var(--info-color);
+}
+
+.toast-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-hiding {
+  opacity: 0;
+  transform: translateX(50px);
+}
+
+.toast-icon {
+  margin-right: 12px;
+  font-size: 1.2rem;
+}
+
+.toast-error .toast-icon {
+  color: var(--error-color);
+}
+
+.toast-warning .toast-icon {
+  color: var(--warning-color);
+}
+
+.toast-success .toast-icon {
+  color: var(--success-color);
+}
+
+.toast-info .toast-icon {
+  color: var(--info-color);
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 10px;
+  font-size: 0.9rem;
+}
+
+/* DMARC and SPF visualization styles */
+.dmarc-raw-container,
+.spf-raw-container {
+  margin-top: 15px;
+}
+
+.dmarc-visual-summary,
+.spf-visual-summary {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+  gap: 20px;
+}
+
+.dark-mode .dmarc-visual-summary,
+.dark-mode .spf-visual-summary {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.policy-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+}
+
+.policy-indicator i {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: var(--primary-color);
+}
+
+.dmarc-settings,
+.spf-settings {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.dmarc-setting,
+.spf-setting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.dmarc-setting i,
+.spf-setting i {
+  font-size: 1rem;
+}
+
+.setting-enabled {
+  color: var(--success-color);
+}
+
+.setting-disabled {
+  color: var(--error-color);
+}
+
+.setting-warning {
+  color: var(--warning-color);
+}
+
+.dmarc-original-record,
+.spf-original-record {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  padding: 12px 15px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  margin-bottom: 15px;
+  overflow-x: auto;
+  word-break: break-all;
+}
+
+.dark-mode .dmarc-original-record,
+.dark-mode .spf-original-record {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dmarc-breakdown-title,
+.spf-breakdown-title {
+  font-weight: 600;
+  margin: 20px 0 10px 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dmarc-parts,
+.spf-parts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dmarc-part,
+.spf-part {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-left: 3px solid var(--border-color);
+}
+
+.dark-mode .dmarc-part,
+.dark-mode .spf-part {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.dmarc-part-value,
+.spf-part-value {
+  font-family: "Consolas", "Monaco", monospace;
+  font-weight: 600;
+  min-width: 100px;
+}
+
+.dmarc-part-explanation,
+.spf-part-explanation {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #666;
+  margin-left: 15px;
+}
+
+.dark-mode .dmarc-part-explanation,
+.dark-mode .spf-part-explanation {
+  color: #aaa;
+}
+
+/* Tag highlighting classes */
+.tag-version {
+  border-left-color: var(--info-color);
+}
+
+.tag-policy-none {
+  border-left-color: var(--warning-color);
+}
+
+.tag-policy-quarantine {
+  border-left-color: var(--warning-color);
+}
+
+.tag-policy-reject {
+  border-left-color: var(--success-color);
+}
+
+.tag-all-reject {
+  border-left-color: var(--success-color);
+}
+
+.tag-all-softfail {
+  border-left-color: var(--warning-color);
+}
+
+.tag-all-neutral {
+  border-left-color: var(--warning-color);
+}
+
+.tag-all-pass {
+  border-left-color: var(--error-color);
+}
+
+.tag-include {
+  border-left-color: var(--info-color);
+}
+
+.tag-a,
+.tag-mx,
+.tag-ip,
+.tag-exists,
+.tag-redirect {
+  border-left-color: var(--primary-color);
+}
+
+.policy-strong {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.policy-medium {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.policy-weak {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.policy-none {
+  color: var(--error-color);
+  font-weight: 600;
+}
+
+/* DNS record visualization styles */
+.dns-raw-container {
+  margin: 15px 0;
+}
+
+.email-providers-section {
+  background-color: rgba(52, 152, 219, 0.1);
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--info-color);
+}
+
+.provider-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 10px 0 0 0;
+}
+
+.provider-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.dns-record-section {
+  margin-bottom: 20px;
+}
+
+.dns-record-type {
+  font-size: 1rem;
+  color: var(--primary-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+.dns-record-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.dns-record-item {
+  font-family: "Consolas", "Monaco", monospace;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+.dark-mode .dns-record-item {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.dns-no-records {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(231, 76, 60, 0.05);
+  border-radius: 6px;
+  padding: 15px;
+  color: var(--error-color);
+}
+
+.score-summary {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: rgba(46, 204, 113, 0.1);
+  border-radius: 6px;
+  border-left: 4px solid var(--success-color);
+}
+
+.methodology-link {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.methodology-link a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Hide inline styles by default and show via class */
+.hidden {
+  display: none;
+}
+
+.visible {
+  display: block;
 }
