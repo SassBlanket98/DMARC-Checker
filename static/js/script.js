@@ -86,8 +86,8 @@ function initApp() {
     });
   });
 
-  // Export Results
-  document.getElementById("export-btn").addEventListener("click", handleExport);
+  // // Export Results
+  // document.getElementById("export-btn").addEventListener("click", handleExport);
 
   // Check button click handler
   checkBtn.addEventListener("click", checkRecord);
