@@ -32,7 +32,7 @@ export async function checkRecord() {
   errorState.lastDomain = domain;
   errorState.lastRecordType = recordType;
 
-  // Reset overview container
+  // Reset overview container - always hide it initially when checking any record
   overviewContainer.style.display = "none";
   overviewContainer.classList.add("hidden");
 
@@ -99,7 +99,7 @@ export async function checkRecord() {
 
     // Handle success response
     if (recordType === "overview") {
-      // Display overview score container
+      // Only display overview score container for "overview" record type
       overviewContainer.style.display = "block";
       overviewContainer.classList.remove("hidden");
 

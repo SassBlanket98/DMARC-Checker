@@ -29,6 +29,13 @@ document.addEventListener("DOMContentLoaded", function () {
   initModals();
   initScoreMethodology();
 
+  // Explicitly hide the overview container on page load
+  const overviewContainer = document.getElementById("overview-container");
+  if (overviewContainer) {
+    overviewContainer.style.display = "none";
+    overviewContainer.classList.add("hidden");
+  }
+
   // Mobile enhancements if needed
   if (isMobileDevice()) {
     initMobileEnhancements();
@@ -41,4 +48,16 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   console.log("Application initialized successfully!");
+});
+
+// Add event listener for page refreshes
+window.addEventListener("pageshow", function (event) {
+  // Hide overview container on refresh
+  if (event.persisted) {
+    const overviewContainer = document.getElementById("overview-container");
+    if (overviewContainer) {
+      overviewContainer.style.display = "none";
+      overviewContainer.classList.add("hidden");
+    }
+  }
 });
