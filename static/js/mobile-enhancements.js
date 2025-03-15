@@ -313,89 +313,116 @@ function fixExportButtonSensitivity() {
   if (!exportBtn) return;
 
   // Variables to track touch events
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchStartTime = 0;
-  let isTouchMove = false;
+  let touchTimer = null;
+  let isHolding = false;
+  let holdComplete = false;
+  const requiredHoldTime = 800; // Hold for 800ms to activate
 
-  // Remove the original click handler to prevent double triggering
-  const originalClickHandler = exportBtn.onclick;
+  // Add visual indicator for hold progress
+  const createHoldIndicator = () => {
+    const indicator = document.createElement("div");
+    indicator.className = "hold-indicator";
+    exportBtn.appendChild(indicator);
+    return indicator;
+  };
+
+  const indicator = createHoldIndicator();
+
+  // Remove default click handler
+  const originalClick = exportBtn.onclick;
   exportBtn.onclick = null;
 
-  // Add touchstart handler
-  exportBtn.addEventListener(
-    "touchstart",
-    function (e) {
-      // Store the starting position and time
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
-      isTouchMove = false;
-    },
-    { passive: true }
-  );
+  // Update button text to indicate hold action
+  const originalText = exportBtn.innerHTML;
+  exportBtn.innerHTML = `<i class="fas fa-file-export"></i> Press and hold to export`;
 
-  // Add touchmove handler to detect swiping
-  exportBtn.addEventListener(
-    "touchmove",
-    function (e) {
-      // Calculate distance moved
-      const touchX = e.touches[0].clientX;
-      const touchY = e.touches[0].clientY;
-      const distX = Math.abs(touchX - touchStartX);
-      const distY = Math.abs(touchY - touchStartY);
+  // Touch start handler
+  exportBtn.addEventListener("touchstart", function (e) {
+    e.preventDefault(); // Prevent any default behavior
 
-      // If moved more than the threshold, mark as a move not a tap
-      if (distX > 10 || distY > 10) {
-        isTouchMove = true;
+    // Clear any existing timer
+    if (touchTimer) clearTimeout(touchTimer);
+
+    // Reset state
+    isHolding = true;
+    holdComplete = false;
+
+    // Show holding animation
+    indicator.style.transition = `width ${requiredHoldTime}ms linear`;
+    indicator.style.width = "0%";
+
+    // Force a reflow to make sure the animation starts from 0
+    void indicator.offsetWidth;
+
+    // Start the animation
+    indicator.style.width = "100%";
+
+    // Set timer for the hold duration
+    touchTimer = setTimeout(() => {
+      if (isHolding) {
+        holdComplete = true;
+
+        // Give haptic feedback if available
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+
+        // Show visual feedback
+        exportBtn.classList.add("hold-complete");
+
+        // Show confirmation dialog
+        if (confirm("Export results as PDF?")) {
+          handleExport();
+        }
+
+        // Reset after a moment
+        setTimeout(() => {
+          exportBtn.classList.remove("hold-complete");
+          indicator.style.width = "0%";
+        }, 300);
       }
-    },
-    { passive: true }
-  );
+    }, requiredHoldTime);
+  });
 
-  // Add touchend handler
-  exportBtn.addEventListener("touchend", function (e) {
-    // Calculate if it was a short tap, not a long press or swipe
-    const touchEndTime = Date.now();
-    const touchDuration = touchEndTime - touchStartTime;
+  // Touch move handler - cancel if moved too much
+  exportBtn.addEventListener("touchmove", function (e) {
+    if (isHolding && !holdComplete) {
+      // Get initial touch point
+      const touch = e.touches[0];
+      const btnRect = exportBtn.getBoundingClientRect();
 
-    // Only trigger the export if it was a deliberate tap:
-    // 1. Touch didn't move much (not a swipe)
-    // 2. Touch duration was short (not a long press)
-    // 3. Touch ended on the same element (didn't slide off)
-    if (!isTouchMove && touchDuration < 300) {
-      // Add a small visual feedback
-      this.classList.add("button-active");
-
-      // Show confirmation dialog on mobile
-      if (confirm("Export results as PDF?")) {
-        // Call the original export function
-        handleExport();
+      // If touch point moves outside button boundaries, cancel the hold
+      if (
+        touch.clientX < btnRect.left - 10 ||
+        touch.clientX > btnRect.right + 10 ||
+        touch.clientY < btnRect.top - 10 ||
+        touch.clientY > btnRect.bottom + 10
+      ) {
+        // Cancel the hold
+        isHolding = false;
+        clearTimeout(touchTimer);
+        indicator.style.transition = "width 0.2s ease-out";
+        indicator.style.width = "0%";
       }
-
-      // Remove visual feedback after a short delay
-      setTimeout(() => {
-        this.classList.remove("button-active");
-      }, 200);
     }
   });
 
-  // Add a touchcancel handler to reset state
-  exportBtn.addEventListener(
-    "touchcancel",
-    function () {
-      isTouchMove = false;
-    },
-    { passive: true }
-  );
+  // Touch end handler
+  exportBtn.addEventListener("touchend", function () {
+    // If they release before hold is complete, cancel the action
+    if (isHolding && !holdComplete) {
+      isHolding = false;
+      clearTimeout(touchTimer);
+      indicator.style.transition = "width 0.2s ease-out";
+      indicator.style.width = "0%";
+    }
+  });
+
+  // Touch cancel handler
+  exportBtn.addEventListener("touchcancel", function () {
+    isHolding = false;
+    clearTimeout(touchTimer);
+    indicator.style.transition = "width 0.2s ease-out";
+    indicator.style.width = "0%";
+  });
 }
-
-// Add this to your initialization functions
-document.addEventListener("DOMContentLoaded", function () {
-  // Your existing initialization code
-
-  // Add our new function to handle the export button
-  if (isMobileDevice()) {
-    fixExportButtonSensitivity();
-  }
-});

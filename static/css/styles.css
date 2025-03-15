@@ -2266,3 +2266,35 @@ button.small {
   background-color: rgba(178, 34, 34, 0.2) !important;
   transform: scale(0.98);
 }
+
+/* Press and hold button styles */
+#export-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.hold-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  width: 0%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1;
+}
+
+.hold-complete {
+  background-color: var(--primary-hover) !important;
+}
+
+/* Make sure the export button has enough space for accidental touches */
+@media (max-width: 768px) {
+  .button-group {
+    margin-top: 15px;
+  }
+
+  #export-btn {
+    margin-top: 10px;
+    padding: 16px 20px;
+  }
+}
