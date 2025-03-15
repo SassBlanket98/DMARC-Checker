@@ -53,6 +53,14 @@ header {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+.logo img {
+  position: absolute;
+  left: 0;
+  top: 39px;
+  margin: 0;
+  padding: 10px;
+}
+
 .header-container {
   display: flex;
   justify-content: space-between;

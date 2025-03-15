@@ -20,9 +20,15 @@
   <body>
     <header>
       <div class="header-container">
+        <div class="logo">
+          <img
+            src="{{ url_for('static', filename='images/Neozeit_logo.png') }}"
+            alt="Neozeit Logo"
+          />
+        </div>
         <div class="app-title">
           <i class="fas fa-shield-alt"></i>
-          <span>Enhanced DMARC Checker</span>
+          <span>DMARC Checker</span>
         </div>
         <nav>
           <ul>
@@ -65,11 +71,11 @@
           </div>
           <div class="input-wrapper">
             <select id="recordType">
-              <option value="overview">Overview (All Records)</option>
               <option value="dmarc">DMARC</option>
               <option value="spf">SPF</option>
               <option value="dkim">DKIM</option>
               <option value="dns">DNS</option>
+              <option value="overview">All Records</option>
             </select>
           </div>
         </div>
@@ -101,9 +107,6 @@
         <div class="button-group">
           <button id="check-btn">
             <i class="fas fa-search"></i> Check Records
-          </button>
-          <button id="batch-check-btn" class="secondary">
-            <i class="fas fa-layer-group"></i> Batch Check
           </button>
           <button id="export-btn" class="secondary">
             <i class="fas fa-file-export"></i> Export Results
@@ -391,12 +394,13 @@
     </div>
 
     <footer>
-      <p>&copy; 2025 Enhanced DMARC Checker | All Rights Reserved</p>
+      <p>&copy; 2025 DMARC Checker | By David Hill</p>
     </footer>
 
     <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <!-- New script imports -->
     <script src="{{ url_for('static', filename='js/score_methodology.js') }}"></script>
     <script src="{{ url_for('static', filename='js/implementation.js') }}"></script>
   </body>

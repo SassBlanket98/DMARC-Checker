@@ -89,11 +89,6 @@ function initApp() {
   // Export Results
   document.getElementById("export-btn").addEventListener("click", handleExport);
 
-  // Batch Check
-  document
-    .getElementById("batch-check-btn")
-    .addEventListener("click", handleBatchCheck);
-
   // Check button click handler
   checkBtn.addEventListener("click", checkRecord);
 
@@ -238,22 +233,468 @@ function handleExport() {
       return;
     }
 
-    // In a real implementation, this would generate a file with the results
-    showToast("Exporting results for " + domainName, "info");
+    // Get the current results from the DOM
+    const resultsElement = document.getElementById("result");
+    if (
+      !resultsElement ||
+      resultsElement.textContent.trim() === "" ||
+      resultsElement.textContent.includes("Enter a domain and check records")
+    ) {
+      showToast(
+        "No results available to export. Please check a domain first.",
+        "warning"
+      );
+      return;
+    }
 
-    // Mock export success after a delay
-    setTimeout(() => {
-      showToast("Results exported successfully!", "success");
-    }, 1000);
+    // Show a loading toast
+    showToast("Generating PDF report...", "info");
+
+    // Get all record cards information
+    const recordCards = document.querySelectorAll(".record-card");
+
+    // Generate a timestamp for the report
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString();
+    const formattedTime = currentDate.toLocaleTimeString();
+
+    // Generate a filename based on domain and date
+    const timestamp = currentDate.toISOString().replace(/[:.]/g, "-");
+    const filename = `dmarc-check_${domainName}_${timestamp}.pdf`;
+
+    // Create a new PDF document
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    // Set document properties
+    doc.setProperties({
+      title: `DMARC Checker Report - ${domainName}`,
+      subject: "Email Authentication Analysis",
+      author: "DMARC Checker Tool",
+      keywords: "DMARC, SPF, DKIM, DNS, email authentication",
+      creator: "DMARC Checker Tool",
+    });
+
+    // Define colors
+    const primaryColor = "#b22222";
+    const textColor = "#333333";
+    const successColor = "#2ecc71";
+    const errorColor = "#e74c3c";
+    const warningColor = "#f39c12";
+
+    // Add logo/header
+    doc.setFillColor(primaryColor);
+    doc.rect(0, 0, 210, 25, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.text("Enhanced DMARC Checker Report", 105, 15, { align: "center" });
+
+    // Add document info block
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, 30, 190, 35, "F");
+
+    doc.setTextColor(textColor);
+    doc.setFontSize(12);
+    doc.text("Domain:", 15, 40);
+    doc.setFontSize(14);
+    doc.setFont(undefined, "bold");
+    doc.text(domainName, 40, 40);
+
+    doc.setFontSize(12);
+    doc.setFont(undefined, "normal");
+    doc.text("Record Type:", 15, 50);
+    doc.text(recordTypeValue.toUpperCase(), 50, 50);
+
+    doc.text("Generated:", 15, 60);
+    doc.text(`${formattedDate} at ${formattedTime}`, 50, 60);
+
+    // Add score visualization if available
+    const scoreContainer = document.querySelector(".score-container");
+    if (scoreContainer && scoreContainer.style.display !== "none") {
+      const scoreValue =
+        document.querySelector(".score-value")?.textContent || "0%";
+      const letterGrade =
+        document
+          .querySelector(".letter-grade")
+          ?.textContent?.replace("Grade ", "") || "";
+
+      // Add score section title
+      doc.setFillColor(primaryColor);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(10, 70, 190, 10, "F");
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text("Authentication Score", 15, 77);
+
+      // Add score visualization
+      doc.setFillColor(240, 240, 240);
+      doc.rect(10, 85, 190, 30, "F");
+
+      // Draw score as a progress bar instead of a pie chart
+      const scoreNum = parseInt(scoreValue);
+      doc.setTextColor(textColor);
+      doc.setFontSize(12);
+      doc.text("Email Authentication Score:", 15, 95);
+
+      // Draw progress bar
+      const barWidth = 100;
+      const barHeight = 15;
+      const barX = 15;
+      const barY = 100;
+
+      // Draw the background bar
+      doc.setDrawColor(220, 220, 220);
+      doc.setFillColor(240, 240, 240);
+      doc.rect(barX, barY, barWidth, barHeight, "FD");
+
+      // Draw the filled portion based on score
+      const fillWidth = (scoreNum / 100) * barWidth;
+      doc.setFillColor(getScoreColor(scoreNum));
+      doc.rect(barX, barY, fillWidth, barHeight, "F");
+
+      // Add score and grade text
+      doc.setTextColor(textColor);
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text(
+        `${scoreValue} (Grade ${letterGrade})`,
+        barX + barWidth + 10,
+        barY + 10
+      );
+
+      // Get component scores
+      const components = document.querySelectorAll(".score-item");
+      if (components.length > 0) {
+        doc.setFontSize(12);
+        doc.setFont(undefined, "normal");
+        let xPos = 20;
+        components.forEach((component, index) => {
+          const label =
+            component.querySelector(".score-item-label")?.textContent || "";
+          const status = component
+            .querySelector(".score-item-value")
+            ?.classList.contains("success")
+            ? "Pass"
+            : "Fail";
+          const color = status === "Pass" ? successColor : errorColor;
+
+          doc.setTextColor(textColor);
+          doc.text(`${label}:`, xPos, 125);
+
+          doc.setTextColor(status === "Pass" ? successColor : errorColor);
+          doc.setFont(undefined, "bold");
+          doc.text(status, xPos + 25, 125);
+          doc.setFont(undefined, "normal");
+
+          xPos += 45;
+        });
+      }
+
+      // Start y position for records after score section
+      var yPos = 135;
+    } else {
+      // Start y position for records if no score section
+      var yPos = 75;
+    }
+
+    // Add each record to the PDF
+    recordCards.forEach((card, index) => {
+      // Check if we need a new page based on remaining space
+      if (yPos > 240) {
+        doc.addPage();
+
+        // Add header to new page
+        doc.setFillColor(primaryColor);
+        doc.rect(0, 0, 210, 15, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.text(`DMARC Checker Report - ${domainName} (continued)`, 105, 10, {
+          align: "center",
+        });
+
+        // Reset y position for new page
+        yPos = 25;
+      }
+
+      // Get the record title
+      const title =
+        card.querySelector("h3")?.textContent.trim() || `Record ${index + 1}`;
+
+      // Get the record status
+      const statusElement = card.querySelector(".status-indicator");
+      const status = statusElement?.textContent.trim() || "Unknown";
+      const isSuccess =
+        statusElement?.classList.contains("status-success") || false;
+
+      // Add section for this record
+      doc.setFillColor(primaryColor);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(10, yPos, 190, 10, "F");
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text(title, 15, yPos + 7);
+
+      // Add status indicator
+      doc.setTextColor(isSuccess ? successColor : errorColor);
+      doc.text(status, 180, yPos + 7, { align: "right" });
+
+      yPos += 15;
+
+      // Get the record value if available
+      const recordValue = card
+        .querySelector(".actual-record")
+        ?.textContent.trim();
+      if (recordValue) {
+        // Add record value section
+        doc.setFillColor(245, 245, 245);
+        doc.rect(10, yPos, 190, 15, "F");
+
+        doc.setTextColor(textColor);
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text("Record Value:", 15, yPos + 5);
+
+        // Handle record value - if too long, truncate with ellipsis
+        const maxChars = 80;
+        const displayValue =
+          recordValue.length > maxChars
+            ? recordValue.substring(0, maxChars) + "..."
+            : recordValue;
+
+        doc.setFont("courier", "normal");
+        doc.text(displayValue, 15, yPos + 12);
+        doc.setFont(undefined, "normal");
+
+        yPos += 20;
+      }
+
+      // Add the parsed details if available
+      const parsedTable = card.querySelector(".parsed-data table");
+      if (parsedTable) {
+        const rows = parsedTable.querySelectorAll("tbody tr");
+        if (rows.length > 0) {
+          // Setup table data
+          const tableData = [];
+          const tableColumns = [
+            { header: "Attribute", dataKey: "attribute" },
+            { header: "Value", dataKey: "value" },
+          ];
+
+          rows.forEach((row) => {
+            const columns = row.querySelectorAll("td");
+            if (columns.length > 1) {
+              const attribute = columns[0].textContent.trim();
+              const value = columns[1].textContent.trim();
+              tableData.push({ attribute, value });
+            }
+          });
+
+          if (tableData.length > 0) {
+            // Check if we need a new page for the table
+            if (yPos > 220) {
+              doc.addPage();
+
+              // Add header to new page
+              doc.setFillColor(primaryColor);
+              doc.rect(0, 0, 210, 15, "F");
+              doc.setTextColor(255, 255, 255);
+              doc.setFontSize(12);
+              doc.text(
+                `DMARC Checker Report - ${domainName} (continued)`,
+                105,
+                10,
+                { align: "center" }
+              );
+
+              // Reset y position for new page
+              yPos = 25;
+            }
+
+            // Add table title
+            doc.setTextColor(textColor);
+            doc.setFontSize(12);
+            doc.setFont(undefined, "bold");
+            doc.text("Parsed Details:", 15, yPos);
+
+            // Add table
+            doc.autoTable({
+              startY: yPos + 5,
+              head: [tableColumns.map((col) => col.header)],
+              body: tableData.map((row) => [row.attribute, row.value]),
+              theme: "grid",
+              headStyles: {
+                fillColor: [200, 200, 200],
+                textColor: [50, 50, 50],
+                fontStyle: "bold",
+              },
+              styles: {
+                fontSize: 9,
+                cellPadding: 3,
+              },
+              margin: { left: 15, right: 15 },
+            });
+
+            // Update yPos to after the table
+            yPos = doc.lastAutoTable.finalY + 10;
+          }
+        }
+      }
+
+      // Add recommendations if available
+      const recommendations = card.querySelector(
+        "#record-" + index + "-recommendations"
+      );
+      if (recommendations) {
+        const recommendationItems =
+          recommendations.querySelectorAll(".recommendation");
+        if (recommendationItems.length > 0) {
+          // Check if we need a new page for recommendations
+          if (yPos > 220) {
+            doc.addPage();
+
+            // Add header to new page
+            doc.setFillColor(primaryColor);
+            doc.rect(0, 0, 210, 15, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(12);
+            doc.text(
+              `DMARC Checker Report - ${domainName} (continued)`,
+              105,
+              10,
+              { align: "center" }
+            );
+
+            // Reset y position for new page
+            yPos = 25;
+          }
+
+          // Add recommendations title
+          doc.setTextColor(textColor);
+          doc.setFontSize(12);
+          doc.setFont(undefined, "bold");
+          doc.text("Recommendations:", 15, yPos);
+
+          yPos += 7;
+
+          // Add each recommendation
+          recommendationItems.forEach((item, i) => {
+            const title = item.querySelector("h4")?.textContent || "";
+            const description = item.querySelector("p")?.textContent || "";
+
+            // Determine recommendation priority by class
+            let priorityColor = warningColor;
+            if (item.classList.contains("high-priority")) {
+              priorityColor = errorColor;
+            } else if (item.classList.contains("low-priority")) {
+              priorityColor = successColor;
+            }
+
+            // Add colored box for recommendation
+            doc.setFillColor(245, 245, 245);
+            doc.rect(15, yPos, 180, 15, "F");
+
+            // Add colored bar on left
+            const rgb = hexToRgb(priorityColor);
+            doc.setFillColor(rgb.r, rgb.g, rgb.b);
+            doc.rect(15, yPos, 3, 15, "F");
+
+            // Add title
+            doc.setTextColor(textColor);
+            doc.setFontSize(10);
+            doc.setFont(undefined, "bold");
+            doc.text(title, 20, yPos + 5);
+
+            // Add description with word wrap
+            doc.setFontSize(9);
+            doc.setFont(undefined, "normal");
+            const splitDescription = doc.splitTextToSize(description, 170);
+            doc.text(splitDescription, 20, yPos + 10);
+
+            // Update yPos based on description length
+            yPos += Math.max(15, splitDescription.length * 5 + 5);
+          });
+
+          yPos += 5;
+        }
+      }
+
+      // Add spacing between records
+      yPos += 10;
+    });
+
+    // Add footer with page numbers
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Page ${i} of ${pageCount}`, 105, 287, { align: "center" });
+      doc.text("Generated by Enhanced DMARC Checker Tool", 105, 292, {
+        align: "center",
+      });
+    }
+
+    // Save the PDF
+    doc.save(filename);
+
+    // Show a success message with the filename
+    showToast(
+      `Report exported to '${filename}' in your downloads folder`,
+      "success"
+    );
   } catch (error) {
+    console.error("Export error:", error);
     showToast("Failed to export results: " + error.message, "error");
   }
 }
 
-// Handle batch check button click
-function handleBatchCheck() {
-  // In a real implementation, this would open a modal for entering multiple domains
-  showToast("Batch check feature coming soon!", "info");
+// Helper function to get color based on score percentage
+function getScoreColor(score) {
+  if (score >= 90) return "#2ecc71"; // A - Green
+  if (score >= 80) return "#27ae60"; // B - Darker green
+  if (score >= 70) return "#f39c12"; // C - Yellow/orange
+  if (score >= 60) return "#e67e22"; // D - Orange
+  return "#e74c3c"; // F - Red
+}
+
+// Helper function to convert hex color to RGB components
+function hexToRgb(hex) {
+  // Remove # if present
+  hex = hex.replace("#", "");
+
+  // Parse the hex values
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  return { r, g, b };
+}
+
+// Helper function to get color based on score percentage
+function getScoreColor(score) {
+  if (score >= 90) return "#2ecc71"; // A - Green
+  if (score >= 80) return "#27ae60"; // B - Darker green
+  if (score >= 70) return "#f39c12"; // C - Yellow/orange
+  if (score >= 60) return "#e67e22"; // D - Orange
+  return "#e74c3c"; // F - Red
+}
+
+// Helper function to convert hex color to RGB components
+function hexToRgb(hex) {
+  // Remove # if present
+  hex = hex.replace("#", "");
+
+  // Parse the hex values
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  return { r, g, b };
 }
 
 // Toggle record card expansion
