@@ -6,6 +6,8 @@ import {
   renderDnsRawData,
   renderDkimRecord,
 } from "./recordParsers.js";
+import { renderReputationData } from "./reputation.js";
+renderRawDataContent;
 
 // Render multiple records for overview
 export function renderDetailedRecords(records) {
@@ -368,6 +370,12 @@ export function renderRawDataContent(record) {
       document.getElementById("domain").value.trim()
     );
   }
+
+  // Special handling for reputation data
+  else if (record.title === "REPUTATION") {
+    return renderReputationData(record.value);
+  }
+
   // For error records, show the existing error message
   else if (record.status === "error") {
     return renderErrorMessage(record.value);
@@ -465,6 +473,15 @@ export function getExplanation(key, recordType) {
       AAAA: "IPv6 address records for the domain",
       MX: "Mail exchange server records for the domain",
       TXT: "Text records containing metadata for the domain",
+    },
+    reputation: {
+      reputation_score: "Overall reputation score of the domain (0-100)",
+      blacklisted: "Whether the domain is on any checked blacklists",
+      blacklist_count: "Number of blacklists the domain is listed on",
+      total_services: "Total number of blacklist services checked",
+      domain_services: "Status of domain-based blacklist checks",
+      ip_services: "Status of IP-based blacklist checks",
+      recommendations: "Suggestions for improving domain reputation",
     },
   };
 

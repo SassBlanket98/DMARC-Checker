@@ -2,17 +2,18 @@
 // This module implements the email authentication score calculation methodology
 
 /**
- * Calculate the email authentication score based on DMARC, SPF, DKIM, and DNS records
+ * Calculate the email authentication score based on DMARC, SPF, DKIM, DNS records, and Domain Reputation
  * @param {Object} records - Object containing the authentication records
  * @returns {Object} - Score data with overall percentage and individual scores
  */
 function calculateAuthScore(records) {
   // Initialize scores for each component
   const scores = {
-    dmarc: { score: 0, maxScore: 35, status: "error", details: [] },
-    spf: { score: 0, maxScore: 30, status: "error", details: [] },
-    dkim: { score: 0, maxScore: 25, status: "error", details: [] },
+    dmarc: { score: 0, maxScore: 30, status: "error", details: [] },
+    spf: { score: 0, maxScore: 25, status: "error", details: [] },
+    dkim: { score: 0, maxScore: 20, status: "error", details: [] },
     dns: { score: 0, maxScore: 10, status: "error", details: [] },
+    reputation: { score: 0, maxScore: 15, status: "error", details: [] }, // Added reputation component
   };
 
   // Process each record type
@@ -40,6 +41,9 @@ function calculateAuthScore(records) {
           break;
         case "dns":
           scoreDns(record, scores.dns);
+          break;
+        case "reputation":
+          scoreReputation(record, scores.reputation);
           break;
       }
     } else {
@@ -73,7 +77,7 @@ function calculateAuthScore(records) {
 }
 
 /**
- * Score DMARC record (35 points max)
+ * Score DMARC record (30 points max)
  * @param {Object} record - DMARC record data
  * @param {Object} scoreObj - Score object to update
  */
@@ -112,7 +116,7 @@ function scoreDmarc(record, scoreObj) {
 }
 
 /**
- * Score SPF record (30 points max)
+ * Score SPF record (25 points max)
  * @param {Object} record - SPF record data
  * @param {Object} scoreObj - Score object to update
  */
@@ -162,7 +166,7 @@ function scoreSpf(record, scoreObj) {
 }
 
 /**
- * Score DKIM record (25 points max)
+ * Score DKIM record (20 points max)
  * @param {Object} record - DKIM record data
  * @param {Object} scoreObj - Score object to update
  */
@@ -193,9 +197,9 @@ function scoreDkim(record, scoreObj) {
       "DKIM is configured with at least one selector (+15)"
     );
 
-    // Bonus points for multiple selectors (up to 10 additional points)
+    // Bonus points for multiple selectors (up to 5 additional points)
     if (validSelectors.length >= 2) {
-      const additionalPoints = Math.min(10, validSelectors.length * 5);
+      const additionalPoints = Math.min(5, validSelectors.length * 2);
       scoreObj.score += additionalPoints;
       scoreObj.details.push(
         `Multiple DKIM selectors configured (${validSelectors.length}) (+${additionalPoints})`
@@ -243,6 +247,64 @@ function scoreDns(record, scoreObj) {
 }
 
 /**
+ * Score domain reputation (15 points max)
+ * @param {Object} record - Reputation record data
+ * @param {Object} scoreObj - Score object to update
+ */
+function scoreReputation(record, scoreObj) {
+  const reputationData = record.parsed_record || {};
+
+  // Get reputation score from the backend (0-100)
+  const reputationScore = reputationData.reputation_score || 0;
+
+  // Calculate points based on reputation score (max 15 points)
+  let points = 0;
+
+  if (reputationScore >= 90) {
+    // Excellent reputation
+    points = 15;
+    scoreObj.details.push("Domain has excellent reputation (+15)");
+  } else if (reputationScore >= 70) {
+    // Good reputation
+    points = 12;
+    scoreObj.details.push("Domain has good reputation (+12)");
+  } else if (reputationScore >= 50) {
+    // Fair reputation
+    points = 8;
+    scoreObj.details.push("Domain has fair reputation (+8)");
+  } else if (reputationScore >= 30) {
+    // Poor reputation
+    points = 4;
+    scoreObj.details.push("Domain has poor reputation (+4)");
+  } else {
+    // Very poor reputation
+    points = 0;
+    scoreObj.details.push("Domain has very poor reputation (+0)");
+  }
+
+  // Check if domain is blacklisted
+  if (reputationData.blacklisted) {
+    const blacklistCount = reputationData.blacklist_count || 0;
+    scoreObj.details.push(`Domain is on ${blacklistCount} blacklist(s)`);
+
+    // If blacklisted, reduce the score based on how many blacklists
+    if (blacklistCount > 3) {
+      // Severe blacklisting issue
+      points = Math.max(0, points - 12);
+    } else {
+      // Less severe blacklisting
+      points = Math.max(0, points - 8);
+    }
+  } else {
+    scoreObj.details.push("Domain is not on any checked blacklists (+5)");
+    // Add bonus points for not being blacklisted at all
+    points = Math.min(15, points + 5);
+  }
+
+  scoreObj.score = points;
+}
+
+/**
  * Get letter grade based on score percentage
  * @param {number} percentage - Score percentage
  * @returns {string} - Letter grade
@@ -271,7 +333,7 @@ function generateRecommendations(scores) {
       description:
         "Add a DMARC record to improve email authentication and prevent spoofing.",
     });
-  } else if (scores.dmarc.score < 25) {
+  } else if (scores.dmarc.score < 20) {
     const policy = findMissingPolicy(scores.dmarc.details);
     if (policy === "none") {
       recommendations.push({
@@ -291,7 +353,7 @@ function generateRecommendations(scores) {
       description:
         "Add an SPF record to specify which mail servers are authorized to send email on behalf of your domain.",
     });
-  } else if (scores.spf.score < 20) {
+  } else if (scores.spf.score < 15) {
     recommendations.push({
       priority: "medium",
       title: "Strengthen SPF Configuration",
@@ -317,6 +379,23 @@ function generateRecommendations(scores) {
       title: "Review DNS Configuration",
       description:
         "Your domain's DNS configuration could be improved. Ensure MX, A, and TXT records are properly configured.",
+    });
+  }
+
+  // Reputation recommendations
+  if (scores.reputation.status === "error") {
+    recommendations.push({
+      priority: "high",
+      title: "Check Domain Reputation",
+      description:
+        "Unable to check domain reputation. This is important for email deliverability.",
+    });
+  } else if (scores.reputation.score < 8) {
+    recommendations.push({
+      priority: "high",
+      title: "Address Domain Reputation Issues",
+      description:
+        "Your domain has reputation issues that could affect email deliverability. Check if your domain is on email blacklists and take steps to improve your reputation.",
     });
   }
 

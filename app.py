@@ -9,6 +9,7 @@ if sys.platform == 'win32':
 import logging
 from flask import Flask, request, jsonify, render_template
 import dmarc_lookup
+import reputation_check
 from concurrent.futures import ThreadPoolExecutor
 from error_handling import (
     api_error_handler, 
@@ -60,7 +61,7 @@ def format_record_data(record_type, data):
     Format record data into a structured response format.
 
     Args:
-        record_type (str): The type of DNS record (e.g., dmarc, spf, dkim, dns).
+        record_type (str): The type of DNS record (e.g., dmarc, spf, dkim, dns, reputation).
         data (dict): Data retrieved for the specified record type.
 
     Returns:
@@ -93,6 +94,19 @@ def format_record_data(record_type, data):
             "status": status,
         }
     
+    # Special handling for reputation data
+    if record_type == "reputation":
+        status = "success"
+        if data.get("blacklisted", False):
+            status = "error"
+        
+        return {
+            "title": record_type.upper(),
+            "value": data,
+            "parsed_record": data,  # Include all data in parsed_record for frontend access
+            "status": status,
+        }
+    
     parsed_record = data.get("parsed_record", {}) if record_type in ["dmarc", "spf", "dns"] else {}
 
     return {
@@ -113,7 +127,7 @@ def overview():
         domain (str): The domain name to fetch records for.
 
     Returns:
-        JSON: A collection of formatted DNS records (dmarc, spf, dkim, dns).
+        JSON: A collection of formatted DNS records (dmarc, spf, dkim, dns, reputation).
     """
     domain = request.args.get("domain")
     if not domain:
@@ -139,6 +153,9 @@ def overview():
     spf_data = run_async(dmarc_lookup.get_spf_record, domain)
     dkim_data = run_async(dmarc_lookup.get_all_dkim_records, domain)
     dns_data = run_async(dmarc_lookup.get_all_dns_records, domain)
+    
+    # Now also fetch reputation data
+    reputation_data = run_async(reputation_check.check_domain_reputation, domain)
 
     # Aggregate all records into a response
     overview_data = {
@@ -147,6 +164,7 @@ def overview():
             format_record_data("spf", spf_data),
             format_record_data("dkim", dkim_data),
             format_record_data("dns", dns_data),
+            format_record_data("reputation", reputation_data),
         ]
     }
 
@@ -159,7 +177,7 @@ def get_record(record_type):
     Retrieve data for a specific DNS record type.
 
     URL Parameters:
-        record_type (str): The type of DNS record to fetch (e.g., dmarc, spf, dkim, dns).
+        record_type (str): The type of DNS record to fetch (e.g., dmarc, spf, dkim, dns, reputation).
 
     Query Parameters:
         domain (str): The domain name to fetch records for.
@@ -191,7 +209,7 @@ def get_record(record_type):
         )
 
     # Validate record type
-    valid_record_types = ["dmarc", "spf", "dkim", "dns"]
+    valid_record_types = ["dmarc", "spf", "dkim", "dns", "reputation"]
     if record_type not in valid_record_types:
         raise DomainError(
             f"Unsupported record type: {record_type}", 
@@ -241,6 +259,8 @@ def get_record(record_type):
                 return jsonify(handle_dkim_error(domain, selector_str, e)), 404
         elif record_type == "dns":
             data = run_async(dmarc_lookup.get_all_dns_records, domain)
+        elif record_type == "reputation":
+            data = run_async(reputation_check.check_domain_reputation, domain)
 
         # Return the fetched data as a JSON response
         return jsonify(data)
@@ -256,6 +276,42 @@ def get_record(record_type):
                 "If the problem persists, contact support."
             ]
         }), 500
+
+@app.route("/api/reputation", methods=["GET"])
+@api_error_handler
+def check_reputation():
+    """
+    Check the reputation of a domain.
+
+    Query Parameters:
+        domain (str): The domain name to check.
+
+    Returns:
+        JSON: Domain reputation information.
+    """
+    domain = request.args.get("domain")
+    if not domain:
+        raise DomainError(
+            "Domain parameter is required", 
+            "MISSING_DOMAIN",
+            ["Please provide a domain name to check."]
+        )
+
+    # Validate domain format
+    if not is_valid_domain(domain):
+        raise DomainError(
+            f"Invalid domain format: {domain}", 
+            "INVALID_DOMAIN_FORMAT",
+            [
+                "Domain should be in a valid format (e.g., example.com).",
+                "Domain should not include protocols or paths (no http://, www., etc.)."
+            ]
+        )
+
+    # Fetch reputation data
+    reputation_data = run_async(reputation_check.check_domain_reputation, domain)
+    
+    return jsonify(reputation_data)
 
 def is_valid_domain(domain):
     """

@@ -48,6 +48,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // fixExportButtonSensitivity();
   }
 
+  // Set up reputation guidance on record type change
+  const recordType = document.getElementById("recordType");
+  if (recordType) {
+    recordType.addEventListener("change", showReputationGuidance);
+  }
+
   console.log("Application initialized successfully!");
 });
 
@@ -62,3 +68,43 @@ window.addEventListener("pageshow", function (event) {
     }
   }
 });
+
+// Add guidance for first-time reputation check users
+function showReputationGuidance() {
+  const recordType = document.getElementById("recordType");
+  if (recordType && recordType.value === "reputation") {
+    import("./modules/toast.js").then((module) => {
+      module.showToast(
+        "The reputation check will verify if your domain is on common email blacklists, which could affect email deliverability.",
+        "info",
+        8000
+      );
+    });
+  }
+}
+
+// Helper function to detect if reputation module is being loaded for the first time
+let reputationCheckedBefore = false;
+export function trackReputationCheck(domain) {
+  if (!reputationCheckedBefore) {
+    reputationCheckedBefore = true;
+    // Store that user has checked reputation before
+    try {
+      localStorage.setItem("reputation_checked", "true");
+    } catch (e) {
+      console.error(
+        "Could not save reputation check status to localStorage",
+        e
+      );
+    }
+
+    // Show a slightly more detailed guidance toast
+    import("./modules/toast.js").then((module) => {
+      module.showToast(
+        "Domain reputation is being checked against multiple blacklist databases. This can take a moment to complete.",
+        "info",
+        7000
+      );
+    });
+  }
+}

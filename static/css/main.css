@@ -11,6 +11,7 @@
 @import "score.css";
 @import "dmarc-visualizer.css";
 @import "error_handling.css";
+@import "reputation.css";
 
 /* Utilities and responsive styles (apply last) */
 @import "responsive.css";

@@ -114,6 +114,7 @@
               <option value="spf">SPF</option>
               <option value="dkim">DKIM</option>
               <option value="dns">DNS</option>
+              <option value="reputation">Reputation - Blacklisting</option>
             </select>
           </div>
         </div>
@@ -182,6 +183,12 @@
             </div>
             <div class="score-item">
               <div class="score-item-label">DNS</div>
+              <div class="score-item-value">
+                <i class="fas fa-question-circle"></i>
+              </div>
+            </div>
+            <div class="score-item">
+              <div class="score-item-label">Reputation</div>
               <div class="score-item-value">
                 <i class="fas fa-question-circle"></i>
               </div>
@@ -325,7 +332,7 @@
 
             <div class="methodology-breakdown">
               <div class="methodology-component">
-                <h4>DMARC (35%)</h4>
+                <h4>DMARC (30%)</h4>
                 <ul>
                   <li>Having a DMARC record: 15 points</li>
                   <li>
@@ -341,7 +348,7 @@
               </div>
 
               <div class="methodology-component">
-                <h4>SPF (30%)</h4>
+                <h4>SPF (25%)</h4>
                 <ul>
                   <li>Having an SPF record: 15 points</li>
                   <li>
@@ -358,11 +365,11 @@
               </div>
 
               <div class="methodology-component">
-                <h4>DKIM (25%)</h4>
+                <h4>DKIM (20%)</h4>
                 <ul>
                   <li>Having at least one valid DKIM selector: 15 points</li>
                   <li>
-                    Multiple valid DKIM selectors: up to 10 additional points
+                    Multiple valid DKIM selectors: up to 5 additional points
                   </li>
                 </ul>
               </div>
@@ -373,6 +380,24 @@
                   <li>MX records properly configured: 5 points</li>
                   <li>A/AAAA records properly configured: 3 points</li>
                   <li>TXT records properly configured: 2 points</li>
+                </ul>
+              </div>
+
+              <div class="methodology-component">
+                <h4>Domain Reputation (15%)</h4>
+                <ul>
+                  <li>
+                    Reputation score tiers:
+                    <ul>
+                      <li>Excellent (90-100): 15 points</li>
+                      <li>Good (70-89): 12 points</li>
+                      <li>Fair (50-69): 8 points</li>
+                      <li>Poor (30-49): 4 points</li>
+                      <li>Very poor (0-29): 0 points</li>
+                    </ul>
+                  </li>
+                  <li>Not on blacklists: +5 points</li>
+                  <li>On blacklists: -8 to -12 points (severity-based)</li>
                 </ul>
               </div>
             </div>

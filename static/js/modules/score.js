@@ -115,6 +115,6 @@ export function updateOverviewDashboard(records) {
 
 // Helper function to get the component index in the score details section
 function getComponentIndex(component) {
-  const componentOrder = { dmarc: 1, spf: 2, dkim: 3, dns: 4 };
+  const componentOrder = { dmarc: 1, spf: 2, dkim: 3, dns: 4, reputation: 5 };
   return componentOrder[component] || 1;
 }
