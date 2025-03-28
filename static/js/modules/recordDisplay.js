@@ -6,7 +6,10 @@ import {
   renderDnsRawData,
   renderDkimRecord,
 } from "./recordParsers.js";
-import { renderReputationData } from "./reputation.js";
+import {
+  renderReputationData,
+  renderReputationRecommendations,
+} from "./reputation.js";
 renderRawDataContent;
 
 // Render multiple records for overview
@@ -314,6 +317,12 @@ function generateParsedDetailRows(record) {
 function generateRecommendations(record) {
   let recommendations = "";
 
+  // Special handling for reputation records - use our new function
+  if (record.title === "REPUTATION") {
+    return renderReputationRecommendations(record.value);
+  }
+
+  // Handle other record types as before
   if (record.title === "DMARC" && record.status === "success") {
     const dmarcData = record.value.parsed_record || {};
     const p = dmarcData.p || "";

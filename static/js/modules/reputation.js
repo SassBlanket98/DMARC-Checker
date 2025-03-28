@@ -158,8 +158,6 @@ export function renderReputationData(data) {
       <div class="reputation-explanation">
         <p>Domain reputation affects email deliverability. Being on email blacklists can cause your messages to be blocked or sent to spam folders.</p>
       </div>
-      
-      ${recommendationsHtml}
     </div>
   `;
 }
@@ -172,4 +170,51 @@ export function processReputationForScoring(data) {
     blacklistCount: data.blacklist_count || 0,
     totalServices: data.total_services || 0,
   };
+}
+
+export function renderReputationRecommendations(data) {
+  // If there's an error with the reputation check, show a basic message
+  if (data.error) {
+    return `<p>Unable to provide recommendations due to an error checking domain reputation.</p>`;
+  }
+
+  // Extract just the recommendations part
+  let recommendationsHtml = "";
+  if (data.recommendations && data.recommendations.length > 0) {
+    const recItems = data.recommendations
+      .map(
+        (rec) =>
+          `<div class="recommendation ${rec.priority}-priority">
+            <h4>${rec.title}</h4>
+            <p>${rec.description}</p>
+          </div>`
+      )
+      .join("");
+
+    recommendationsHtml = `
+      <div class="reputation-recommendations">
+        <h4>Recommendations:</h4>
+        ${recItems}
+      </div>
+    `;
+  } else {
+    recommendationsHtml = `<p>No specific recommendations available.</p>`;
+  }
+
+  // New: Add a generic recommendation for blacklist removal if domain is blacklisted
+  if (data.blacklisted) {
+    recommendationsHtml += `
+      <div class="recommendation high-priority">
+        <h4>Blacklist Removal Steps</h4>
+        <ol>
+          <li>Identify and fix the issue that caused blacklisting (spam, security breach, etc.)</li>
+          <li>Implement proper email authentication (SPF, DKIM, DMARC)</li>
+          <li>Submit removal requests to each blacklist operator</li>
+          <li>Monitor your domain reputation regularly</li>
+        </ol>
+      </div>
+    `;
+  }
+
+  return recommendationsHtml;
 }
