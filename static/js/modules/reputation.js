@@ -178,9 +178,9 @@ export function renderReputationRecommendations(data) {
     return `<p>Unable to provide recommendations due to an error checking domain reputation.</p>`;
   }
 
-  // Extract just the recommendations part
-  let recommendationsHtml = "";
+  // Check if we already have recommendations from the server
   if (data.recommendations && data.recommendations.length > 0) {
+    // Use the server-provided recommendations instead of generating our own
     const recItems = data.recommendations
       .map(
         (rec) =>
@@ -191,19 +191,16 @@ export function renderReputationRecommendations(data) {
       )
       .join("");
 
-    recommendationsHtml = `
+    return `
       <div class="reputation-recommendations">
-        <h4>Recommendations:</h4>
         ${recItems}
       </div>
     `;
-  } else {
-    recommendationsHtml = `<p>No specific recommendations available.</p>`;
   }
 
-  // New: Add a generic recommendation for blacklist removal if domain is blacklisted
-  if (data.blacklisted) {
-    recommendationsHtml += `
+  // If no server recommendations but domain is blacklisted, show a generic removal steps recommendation
+  else if (data.blacklisted) {
+    return `
       <div class="recommendation high-priority">
         <h4>Blacklist Removal Steps</h4>
         <ol>
@@ -216,5 +213,8 @@ export function renderReputationRecommendations(data) {
     `;
   }
 
-  return recommendationsHtml;
+  // If no recommendations and not blacklisted
+  else {
+    return `<p>No specific recommendations available for this domain.</p>`;
+  }
 }
