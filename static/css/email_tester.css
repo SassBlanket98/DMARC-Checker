@@ -378,3 +378,26 @@ textarea:focus {
     text-align: center;
   }
 }
+
+.simulation-notice {
+  margin-top: 15px;
+  padding: 12px 15px;
+  background-color: rgba(52, 152, 219, 0.1);
+  border-left: 4px solid var(--info-color);
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.simulation-notice i {
+  color: var(--info-color);
+  font-size: 1.1rem;
+  margin-top: 2px;
+}
+
+.dark-mode .simulation-notice {
+  background-color: rgba(52, 152, 219, 0.15);
+}

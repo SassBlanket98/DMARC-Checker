@@ -147,6 +147,9 @@ function setupEmailTesterEventListeners() {
         return;
       }
 
+      // Show a notice about simulation mode
+      showToast("Running simulation - no emails will be sent", "info", 3000);
+
       // Run advanced test
       runAdvancedEmailTest(fromName, fromEmail, subject, content, testEmail);
     });

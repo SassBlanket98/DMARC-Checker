@@ -97,7 +97,7 @@ export function runAdvancedEmailTest(
   }
 
   // Show loading state
-  testResultBox.innerHTML = generateTestRunningHTML();
+  testResultBox.innerHTML = generateTestRunningHTML(true); // Add parameter to indicate simulation
 
   // Start the time elapsed counter
   const timeElapsedInterval = startTimeElapsed("time-elapsed");
@@ -111,6 +111,7 @@ export function runAdvancedEmailTest(
     test_email: testEmail,
     domain: domain,
     test_type: "advanced",
+    simulate: true, // Add this flag to indicate simulation mode
   };
 
   // Call the API to run the test
@@ -143,12 +144,7 @@ export function runAdvancedEmailTest(
         fromEmail,
         domain,
         "advanced",
-        {
-          fromName,
-          subject,
-          content,
-          testEmail,
-        }
+        { fromName, subject, content, testEmail }
       );
 
       // Add retry button functionality
@@ -219,13 +215,17 @@ async function fetchEmailTestResults(testData) {
 }
 
 // Generate HTML for test running state
-function generateTestRunningHTML() {
+function generateTestRunningHTML(isSimulation = false) {
   return `
     <div class="test-status status-running">
       <div class="test-status-spinner"></div>
       <div class="test-status-message">
-        <strong>Test in progress...</strong>
-        <p>We're running your email deliverability test. This may take up to 1 minute.</p>
+        <strong>${isSimulation ? "Simulation" : "Test"} in progress...</strong>
+        <p>We're ${
+          isSimulation ? "simulating" : "running"
+        } your email deliverability test. This may take up to ${
+    isSimulation ? "30 seconds" : "1 minute"
+  }.</p>
         <p id="time-elapsed">Time elapsed: 0:00</p>
       </div>
     </div>
@@ -233,11 +233,19 @@ function generateTestRunningHTML() {
       <div class="results-section">
         <h3>What's happening?</h3>
         <ol>
-          <li>Sending a test email</li>
-          <li>Analyzing authentication (SPF, DKIM, DMARC)</li>
-          <li>Checking spam triggers</li>
-          <li>Evaluating deliverability factors</li>
-          <li>Generating recommendations</li>
+          ${
+            isSimulation
+              ? `<li>Analyzing domain configuration</li>
+             <li>Checking authentication (SPF, DKIM, DMARC)</li>
+             <li>Simulating email delivery</li>
+             <li>Evaluating content for spam triggers</li>
+             <li>Generating recommendations</li>`
+              : `<li>Sending a test email</li>
+             <li>Analyzing authentication (SPF, DKIM, DMARC)</li>
+             <li>Checking spam triggers</li>
+             <li>Evaluating deliverability factors</li>
+             <li>Generating recommendations</li>`
+          }
         </ol>
       </div>
     </div>

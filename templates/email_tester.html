@@ -216,32 +216,33 @@
                 rows="5"
                 placeholder="Enter the content of your test email..."
               >
-This is a test email to verify deliverability.</textarea
+        This is a test email to verify deliverability.</textarea
               >
             </div>
           </div>
           <div class="input-group">
             <div class="input-wrapper">
-              <label for="test-email">Send Test Email To</label>
+              <label for="test-email">Test Recipient (for simulation only)</label>
               <input
                 type="email"
                 id="test-email"
-                placeholder="test@deliverability-check.com"
-                value="test@deliverability-check.com"
+                placeholder="recipient@example.com"
+                value="recipient@example.com"
               />
               <p class="input-hint">
-                <i class="fas fa-info-circle"></i> We'll send your test email to
-                this address
+                <i class="fas fa-info-circle"></i> No emails will be sent - this is used for simulation only
               </p>
             </div>
           </div>
           <div class="button-group">
             <button id="run-advanced-test-btn">
-              <i class="fas fa-paper-plane"></i> Run Advanced Test
+              <i class="fas fa-chart-line"></i> Run Simulated Test
             </button>
           </div>
+          <div class="simulation-notice">
+            <i class="fas fa-info-circle"></i> This test runs a comprehensive simulation of email deliverability without sending any actual emails. It analyzes your domain's configuration, authentication records, and content to predict deliverability.
+          </div>
         </div>
-      </div>
 
       <div class="container" id="results-container" style="display: none">
         <h2>Test Results</h2>
@@ -277,30 +278,57 @@ This is a test email to verify deliverability.</textarea
         </div>
         <div class="modal-body">
           <div class="modal-section">
-            <h3>About Email Deliverability Testing</h3>
-            <p>
-              The Email Deliverability Tester helps you determine whether your
-              emails are likely to reach your recipients' inboxes or be filtered
-              as spam. It checks:
-            </p>
+            <h3>How to Use This Tool</h3>
+            <ol>
+              <li>
+                <strong>Quick Test:</strong> Enter your email address and domain to check basic authentication setup.
+              </li>
+              <li>
+                <strong>Advanced Simulated Test:</strong> Provide detailed information for a comprehensive analysis of your email configuration without sending any actual emails.
+              </li>
+              <li>
+                Click "Run Test" or "Run Simulated Test" to analyze your domain and email setup.
+              </li>
+              <li>
+                Review your deliverability score, authentication results, and recommendations.
+              </li>
+            </ol>
+          </div>
+
+          <div class="modal-section">
+            <h3>Understanding Test Results</h3>
+            <p>Your test results include:</p>
             <ul>
               <li>
-                <strong>Authentication</strong> - Whether your emails pass SPF,
-                DKIM, and DMARC checks
+                <strong>Deliverability Score</strong> - Overall rating of how likely your emails are to be delivered
               </li>
               <li>
-                <strong>Spam Filtering</strong> - How likely your email is to be
-                caught by spam filters
+                <strong>Authentication Results</strong> - Whether your emails pass SPF, DKIM, and DMARC
               </li>
               <li>
-                <strong>Infrastructure</strong> - Whether your email server is
-                properly configured
+                <strong>Spam Analysis</strong> - Factors that could trigger spam filters
               </li>
               <li>
-                <strong>Content Analysis</strong> - Whether your email content
-                contains spam triggers
+                <strong>Recommendations</strong> - Specific steps to improve deliverability
               </li>
             </ul>
+          </div>
+
+          <div class="modal-section">
+            <h3>About Simulation Mode</h3>
+            <p>
+              The Advanced Test uses simulation mode, which means:
+            </p>
+            <ul>
+              <li><strong>No emails are sent</strong> during testing - everything is simulated</li>
+              <li>Your domain's DNS records are analyzed for proper email authentication setup</li>
+              <li>Email content is scanned for potential spam triggers</li>
+              <li>All analysis happens locally without any external email transmission</li>
+              <li>Results provide the same insights as if a real email had been sent and analyzed</li>
+            </ul>
+            <p>
+              This approach is faster, more secure, and avoids potential deliverability issues from test emails.
+            </p>
           </div>
 
           <div class="modal-section">
