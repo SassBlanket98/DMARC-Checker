@@ -3,6 +3,8 @@ import sys
 import logging
 import ip_checker
 import email_tester
+import auth_verification
+import datetime
 
 # Windows-specific setup
 if sys.platform == 'win32':
@@ -21,6 +23,8 @@ from error_handling import (
     handle_dkim_error,
     DomainError
 )
+from auth_verification import verify_spf_setup, verify_dkim_setup, verify_dmarc_setup, calculate_overall_auth_status
+
 
 logging.getLogger('werkzeug').setLevel(logging.INFO)
 
@@ -509,6 +513,122 @@ def test_email_deliverability():
                 "If the problem persists, contact support."
             ]
         }), 500
+        
+@app.route('/auth-wizard')
+def auth_wizard_page():
+    """
+    Render the email authentication setup wizard page.
+
+    Returns:
+        HTML: The rendered auth_wizard.html page.
+    """
+    return render_template('auth_wizard.html')
+
+# Add these API endpoints to the app.py file
+
+@app.route("/api/verify-auth", methods=["POST"])
+@api_error_handler
+def verify_auth_setup():
+    """
+    Verify email authentication setup (SPF, DKIM, DMARC) for a domain.
+
+    Request JSON body:
+        domain (str): Domain to verify
+        record_type (str, optional): Specific record type to verify (spf, dkim, dmarc, or all)
+        dkim_selector (str, optional): DKIM selector to check (if record_type is dkim)
+
+    Returns:
+        JSON: Verification results including status, recommendations, etc.
+    """
+    # Get JSON data from request
+    if not request.is_json:
+        raise DomainError(
+            "Request must be JSON",
+            "INVALID_REQUEST_FORMAT",
+            ["Please send a properly formatted JSON request."]
+        )
+    
+    verify_data = request.get_json()
+    
+    # Validate domain
+    domain = verify_data.get("domain")
+    if not domain:
+        raise DomainError(
+            "Domain parameter is required", 
+            "MISSING_DOMAIN",
+            ["Please provide a domain name to verify."]
+        )
+        
+    # Validate domain format
+    if not is_valid_domain(domain):
+        raise DomainError(
+            f"Invalid domain format: {domain}", 
+            "INVALID_DOMAIN_FORMAT",
+            [
+                "Domain should be in a valid format (e.g., example.com).",
+                "Domain should not include protocols or paths (no http://, www., etc.)."
+            ]
+        )
+    
+    # Determine what to verify
+    record_type = verify_data.get("record_type", "all").lower()
+    
+    # Check specific verification types
+    if record_type == "spf":
+        result = run_async(verify_spf_setup, domain)
+        return jsonify(result)
+    
+    elif record_type == "dkim":
+        # Get DKIM selector if provided
+        dkim_selector = verify_data.get("dkim_selector")
+        if not dkim_selector:
+            raise DomainError(
+                "DKIM selector is required for DKIM verification", 
+                "MISSING_DKIM_SELECTOR",
+                ["Please provide a DKIM selector to verify."]
+            )
+            
+        result = run_async(verify_dkim_setup, domain, dkim_selector)
+        return jsonify(result)
+    
+    elif record_type == "dmarc":
+        result = run_async(verify_dmarc_setup, domain)
+        return jsonify(result)
+    
+    elif record_type == "all":
+        # Verify all authentication methods
+        result = {
+            "domain": domain,
+            "verification_date": datetime.datetime.now().isoformat(),
+            "records": {}
+        }
+        
+        # Run all verification checks
+        result["records"]["spf"] = run_async(verify_spf_setup, domain)
+        
+        # For DKIM, we'll try common selectors if none provided
+        dkim_selector = verify_data.get("dkim_selector")
+        if dkim_selector:
+            result["records"]["dkim"] = run_async(verify_dkim_setup, domain, dkim_selector)
+        else:
+            # Try common selectors
+            common_selectors = ["google", "selector1", "default", "zoho", "mail", "dkim", "20221201", "amazonses"]
+            dkim_results = run_async(verify_dkim_setup, domain, common_selectors)
+            result["records"]["dkim"] = dkim_results
+        
+        result["records"]["dmarc"] = run_async(verify_dmarc_setup, domain)
+        
+        # Calculate overall status
+        result["overall_status"] = calculate_overall_auth_status(result["records"])
+        
+        return jsonify(result)
+    
+    else:
+        raise DomainError(
+            f"Invalid record type: {record_type}", 
+            "INVALID_RECORD_TYPE",
+            ["Valid record types are: spf, dkim, dmarc, all"]
+        )
 
 # Main Entry Point
 if __name__ == '__main__':

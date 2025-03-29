@@ -49,51 +49,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Set up event listeners for email tester
 function setupEmailTesterEventListeners() {
-  // Test mode buttons
+  // Test mode button for quick test only
   const quickTestBtn = document.getElementById("quick-test-btn");
-  const advancedTestBtn = document.getElementById("advanced-test-btn");
+  // Select panels; advanced panel is no longer needed
   const quickTestPanel = document.getElementById("quick-test-panel");
-  const advancedTestPanel = document.getElementById("advanced-test-panel");
 
-  // Test run buttons
+  // Test run button for quick test
   const runTestBtn = document.getElementById("run-test-btn");
-  const runAdvancedTestBtn = document.getElementById("run-advanced-test-btn");
 
-  // Make sure the panels are in the correct initial state
-  if (quickTestPanel && advancedTestPanel) {
-    // Ensure quick test is shown by default and advanced is hidden
+  // Make sure the quick test is visible
+  if (quickTestPanel) {
     quickTestPanel.classList.remove("hidden");
-    advancedTestPanel.classList.add("hidden");
   }
 
-  // Test mode toggle handlers
+  // (Optional) If quickTestBtn is present, mark it active
   if (quickTestBtn) {
-    quickTestBtn.addEventListener("click", function () {
-      quickTestBtn.classList.add("active");
-      advancedTestBtn.classList.remove("active");
-
-      // Hide advanced panel first, then show quick panel
-      if (advancedTestPanel) advancedTestPanel.classList.add("hidden");
-      if (quickTestPanel) quickTestPanel.classList.remove("hidden");
-
-      console.log("Quick test selected");
-    });
+    quickTestBtn.classList.add("active");
   }
 
-  if (advancedTestBtn) {
-    advancedTestBtn.addEventListener("click", function () {
-      advancedTestBtn.classList.add("active");
-      quickTestBtn.classList.remove("active");
-
-      // Hide quick panel first, then show advanced panel
-      if (quickTestPanel) quickTestPanel.classList.add("hidden");
-      if (advancedTestPanel) advancedTestPanel.classList.remove("hidden");
-
-      console.log("Advanced test selected");
-    });
-  }
-
-  // Run test button handlers
+  // Run test button handler remains
   if (runTestBtn) {
     runTestBtn.addEventListener("click", function () {
       const fromEmail = document.getElementById("from-email").value.trim();
@@ -115,43 +89,8 @@ function setupEmailTesterEventListeners() {
         return;
       }
 
-      // If domain field is empty, try to extract from email
-      const extractedDomain = domain || fromEmail.split("@")[1];
-
       // Run the test
-      runEmailTest(fromEmail, extractedDomain);
-    });
-  }
-
-  if (runAdvancedTestBtn) {
-    runAdvancedTestBtn.addEventListener("click", function () {
-      const fromName = document.getElementById("from-name").value.trim();
-      const fromEmail = document.getElementById("from-email-adv").value.trim();
-      const subject = document.getElementById("subject").value.trim();
-      const content = document.getElementById("email-content").value.trim();
-      const testEmail = document.getElementById("test-email").value.trim();
-
-      // Validate inputs
-      if (!fromEmail) {
-        showToast("Please enter your email address", "error");
-        return;
-      }
-
-      if (!isValidEmail(fromEmail)) {
-        showToast("Please enter a valid email address", "error");
-        return;
-      }
-
-      if (!testEmail || !isValidEmail(testEmail)) {
-        showToast("Please enter a valid test email address", "error");
-        return;
-      }
-
-      // Show a notice about simulation mode
-      showToast("Running simulation - no emails will be sent", "info", 3000);
-
-      // Run advanced test
-      runAdvancedEmailTest(fromName, fromEmail, subject, content, testEmail);
+      runEmailTest(fromEmail, domain);
     });
   }
 
