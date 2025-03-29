@@ -1,0 +1,515 @@
+/* header_analyzer.css - Styles for the Email Header Analyzer page */
+
+/* Input Section Layout */
+.input-section {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Textarea for headers */
+.textarea-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+textarea#email-headers {
+  width: 100%;
+  min-height: 300px;
+  padding: 15px;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--card-background);
+  color: var(--text-color);
+  resize: vertical;
+}
+
+textarea#email-headers:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(178, 34, 34, 0.1);
+}
+
+/* Button row */
+.button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.primary-btn,
+.secondary-btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.primary-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.primary-btn:hover {
+  background-color: var(--primary-hover);
+}
+
+.secondary-btn {
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.secondary-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .secondary-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Instructions section */
+.instructions {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.dark-mode .instructions {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.instructions h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+.email-clients {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.email-client h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+
+.email-client ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.email-client li {
+  margin-bottom: 5px;
+}
+
+/* Results Styles */
+.results-container.hidden {
+  display: none;
+}
+
+/* Authentication Results */
+.auth-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.auth-result {
+  flex: 1;
+  min-width: 200px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.dark-mode .auth-result {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.auth-result-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.auth-result-header i {
+  font-size: 1.2rem;
+}
+
+.auth-result h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.auth-result.pass {
+  border-left: 4px solid var(--success-color);
+}
+
+.auth-result.pass i {
+  color: var(--success-color);
+}
+
+.auth-result.fail {
+  border-left: 4px solid var(--error-color);
+}
+
+.auth-result.fail i {
+  color: var(--error-color);
+}
+
+.auth-result.neutral {
+  border-left: 4px solid var(--warning-color);
+}
+
+.auth-result.neutral i {
+  color: var(--warning-color);
+}
+
+.auth-result-details {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Email Journey Visualization */
+.email-journey {
+  margin-bottom: 25px;
+}
+
+.journey-title {
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+}
+
+.journey-visualization {
+  position: relative;
+  margin: 20px 0;
+}
+
+.journey-line {
+  position: absolute;
+  top: 25px;
+  left: 15px;
+  width: calc(100% - 30px);
+  height: 4px;
+  background-color: var(--border-color);
+  z-index: 1;
+}
+
+.journey-stops {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  z-index: 2;
+}
+
+.journey-stop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px;
+}
+
+.stop-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--card-background);
+  border: 2px solid var(--primary-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.stop-label {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.stop-time {
+  font-size: 0.75rem;
+  color: #777;
+}
+
+.dark-mode .stop-time {
+  color: #aaa;
+}
+
+/* Timeline */
+.header-timeline {
+  margin-bottom: 25px;
+}
+
+.timeline-item {
+  display: flex;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.timeline-time {
+  width: 180px;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+}
+
+.timeline-server {
+  flex: 1;
+}
+
+.timeline-server-name {
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.timeline-server-details {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.dark-mode .timeline-server-details {
+  color: #aaa;
+}
+
+.timeline-delay {
+  width: 120px;
+  text-align: right;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.dark-mode .timeline-delay {
+  color: #aaa;
+}
+
+.delay-warning {
+  color: var(--warning-color);
+}
+
+.delay-critical {
+  color: var(--error-color);
+}
+
+/* Header Details */
+.header-details {
+  margin-bottom: 25px;
+}
+
+.header-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.header-table th,
+.header-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-table th {
+  background-color: rgba(0, 0, 0, 0.02);
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.dark-mode .header-table th {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.header-table tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.dark-mode .header-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.header-name {
+  font-family: "Consolas", "Monaco", monospace;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.header-value {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.header-explanation {
+  font-size: 0.85rem;
+  color: #777;
+  padding-top: 5px;
+}
+
+.dark-mode .header-explanation {
+  color: #aaa;
+}
+
+/* Security Issues */
+.security-issues {
+  margin-bottom: 25px;
+}
+
+.issue-item {
+  display: flex;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.02);
+  margin-bottom: 15px;
+  border-left: 4px solid var(--error-color);
+}
+
+.dark-mode .issue-item {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.issue-icon {
+  color: var(--error-color);
+  font-size: 1.2rem;
+  margin-right: 15px;
+  margin-top: 2px;
+}
+
+.issue-content {
+  flex: 1;
+}
+
+.issue-title {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.issue-description {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.no-issues {
+  padding: 15px;
+  background-color: rgba(46, 204, 113, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid var(--success-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.no-issues i {
+  color: var(--success-color);
+  font-size: 1.2rem;
+}
+
+/* Raw Headers */
+.raw-headers {
+  margin-top: 30px;
+}
+
+.raw-headers summary {
+  cursor: pointer;
+  font-weight: 500;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.dark-mode .raw-headers summary {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.raw-headers pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 15px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.dark-mode .raw-headers pre {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* No Headers State */
+.no-headers {
+  padding: 20px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.dark-mode .no-headers {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.no-headers i {
+  font-size: 2rem;
+  color: #777;
+  margin-bottom: 15px;
+}
+
+.dark-mode .no-headers i {
+  color: #aaa;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .input-section {
+    grid-template-columns: 1fr;
+  }
+
+  .journey-stops {
+    overflow-x: auto;
+    padding-bottom: 15px;
+  }
+
+  .timeline-item {
+    flex-direction: column;
+  }
+
+  .timeline-time,
+  .timeline-delay {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+
+  .timeline-delay {
+    text-align: left;
+    margin-top: 5px;
+  }
+
+  .auth-summary {
+    flex-direction: column;
+  }
+
+  .auth-result {
+    min-width: 100%;
+  }
+}

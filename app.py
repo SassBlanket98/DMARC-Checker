@@ -630,6 +630,16 @@ def verify_auth_setup():
             ["Valid record types are: spf, dkim, dmarc, all"]
         )
 
+@app.route('/header-analyzer')
+def header_analyzer_page():
+    """
+    Render the email header analyzer page.
+
+    Returns:
+        HTML: The rendered header_analyzer.html page.
+    """
+    return render_template('header_analyzer.html')
+
 # Main Entry Point
 if __name__ == '__main__':
     print("\n * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)")
