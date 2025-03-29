@@ -70,8 +70,30 @@
         </div>
         <nav>
           <ul>
-            <li>
-              <a href="#" class="active"><i class="fas fa-home"></i> Home</a>
+            <li class="nav-dropdown">
+              <a
+                href="#"
+                id="nav-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i class="fas fa-bars"></i> Navigation
+                <i class="fas fa-caret-down"></i>
+              </a>
+              <div class="dropdown-menu" id="nav-dropdown-menu" role="menu">
+                <a href="/" role="menuitem" class="active"
+                  ><i class="fas fa-home"></i> Home</a
+                >
+                <a href="/bulk-check.html" role="menuitem"
+                  ><i class="fas fa-list-check"></i> Bulk Check</a
+                >
+                <a href="/tools.html" role="menuitem"
+                  ><i class="fas fa-tools"></i> Tools</a
+                >
+                <a href="/about.html" role="menuitem"
+                  ><i class="fas fa-info-circle"></i> About</a
+                >
+              </div>
             </li>
             <li>
               <a href="#" id="help-link"

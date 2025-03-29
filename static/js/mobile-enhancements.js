@@ -472,3 +472,70 @@ export function fixExportButtonSensitivity() {
   });
 }
 */
+
+// Mobile Navigation Enhancements
+export function enhanceNavigationForMobile() {
+  if (!isMobileDevice()) return;
+
+  const navToggle = document.getElementById("nav-toggle");
+  const dropdownMenu = document.getElementById("nav-dropdown-menu");
+
+  if (!navToggle || !dropdownMenu) return;
+
+  // Add touch optimization for navigation items
+  const navItems = dropdownMenu.querySelectorAll("a");
+  navItems.forEach((item) => {
+    // Increase tap target size
+    item.style.padding = "14px 16px";
+
+    // Prevent default touch behavior to avoid delayed click
+    item.addEventListener(
+      "touchstart",
+      function (e) {
+        e.preventDefault();
+        this.click();
+      },
+      { passive: false }
+    );
+  });
+
+  // Optimize nav toggle for touch
+  navToggle.addEventListener(
+    "touchstart",
+    function (e) {
+      // Don't prevent default here to maintain toggle functionality
+      this.classList.add("button-active");
+    },
+    { passive: true }
+  );
+
+  navToggle.addEventListener(
+    "touchend",
+    function () {
+      setTimeout(() => {
+        this.classList.remove("button-active");
+      }, 150);
+    },
+    { passive: true }
+  );
+
+  // Hide dropdown when scrolling (common mobile UX pattern)
+  let lastScrollTop = 0;
+  window.addEventListener(
+    "scroll",
+    function () {
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+
+      // Only hide if scrolling down more than 10px
+      if (scrollTop > lastScrollTop + 10) {
+        dropdownMenu.classList.remove("show");
+        navToggle.classList.remove("active");
+        navToggle.setAttribute("aria-expanded", "false");
+      }
+
+      lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    },
+    { passive: true }
+  );
+}

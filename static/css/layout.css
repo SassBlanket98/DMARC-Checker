@@ -14,9 +14,6 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
 }
 
 .app-title {
@@ -31,11 +28,7 @@ header {
 }
 
 .logo img {
-  position: relative;
-  left: 0;
-  /* top: 39px; */
-  margin: 0;
-  /* padding: 10px; */
+  height: auto;
 }
 
 /* Navigation */
