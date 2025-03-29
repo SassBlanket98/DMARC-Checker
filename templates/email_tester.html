@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#b22222" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+
+    <!-- For better support across browsers and devices -->
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <title>Email Deliverability Tester - Neozeit</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/email_tester.js') }}"
+    ></script>
+  </head>
+  <body>
+    <header>
+      <div class="header-container">
+        <div class="logo">
+          <img
+            src="{{ url_for('static', filename='images/Neozeit.png') }}"
+            alt="Neozeit Logo"
+          />
+        </div>
+        <div class="app-title">
+          <i class="fas fa-envelope"></i>
+          <span>Email Deliverability Tester</span>
+        </div>
+        <nav>
+          <ul>
+            <li class="nav-dropdown">
+              <a
+                href="#"
+                id="nav-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i class="fas fa-bars"></i> Tools
+                <i class="fas fa-caret-down"></i>
+              </a>
+              <div class="dropdown-menu" id="nav-dropdown-menu" role="menu">
+                <a href="/" role="menuitem"
+                  ><i class="fas fa-home"></i> Record Checker</a
+                >
+                <a href="/ip-checker" role="menuitem"
+                  ><i class="fas fa-network-wired"></i> IP Checker</a
+                >
+                <a href="/email-tester" role="menuitem" class="active"
+                  ><i class="fas fa-envelope"></i> Email Tester</a
+                >
+                <a href="/bulk-check.html" role="menuitem"
+                  ><i class="fas fa-list-check"></i> Bulk Check</a
+                >
+                <a href="/tools.html" role="menuitem"
+                  ><i class="fas fa-tools"></i> Tools</a
+                >
+                <a href="/about.html" role="menuitem"
+                  ><i class="fas fa-info-circle"></i> About</a
+                >
+              </div>
+            </li>
+            <li>
+              <a href="#" id="help-link"
+                ><i class="fas fa-question-circle"></i> Help</a
+              >
+            </li>
+            <li>
+              <a href="#" id="history-link"
+                ><i class="fas fa-history"></i> History</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="controls">
+        <button class="theme-toggle" aria-label="Toggle dark mode">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="container">
+        <h2>Email Deliverability Test</h2>
+        <p>
+          Test your email deliverability by sending a test email. We'll analyze
+          the headers, authentication results, and provide a deliverability
+          score.
+        </p>
+        <div class="test-modes">
+          <div class="test-mode-selector">
+            <button id="quick-test-btn" class="test-mode-btn active">
+              <i class="fas fa-bolt"></i> Quick Test
+            </button>
+            <button id="advanced-test-btn" class="test-mode-btn">
+              <i class="fas fa-sliders-h"></i> Advanced Test
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick test panel - visible by default -->
+        <div id="quick-test-panel" class="test-panel">
+          <div class="input-group">
+            <div class="input-wrapper">
+              <label for="from-email">Your Email Address</label>
+              <input
+                type="email"
+                id="from-email"
+                placeholder="your-email@example.com"
+                autocomplete="email"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <label for="domain-name">Domain to Test</label>
+              <input
+                type="text"
+                id="domain-name"
+                placeholder="example.com"
+                autocomplete="off"
+              />
+              <p class="input-hint">
+                <i class="fas fa-info-circle"></i> Usually the part after @ in
+                your email
+              </p>
+            </div>
+          </div>
+          <div class="button-group">
+            <button id="run-test-btn">
+              <i class="fas fa-paper-plane"></i> Run Test
+            </button>
+          </div>
+        </div>
+
+        <!-- Advanced test panel - hidden by default -->
+        <div id="advanced-test-panel" class="test-panel hidden">
+          <div class="input-group">
+            <div class="input-wrapper">
+              <label for="from-name">From Name</label>
+              <input
+                type="text"
+                id="from-name"
+                placeholder="Your Name"
+                autocomplete="name"
+              />
+            </div>
+            <div class="input-wrapper">
+              <label for="from-email-adv">From Email</label>
+              <input
+                type="email"
+                id="from-email-adv"
+                placeholder="your-email@example.com"
+                autocomplete="email"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <label for="subject">Subject Line</label>
+              <input
+                type="text"
+                id="subject"
+                placeholder="Test Email Subject"
+                value="Email Deliverability Test"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <div class="input-wrapper full-width">
+              <label for="email-content">Email Content</label>
+              <textarea
+                id="email-content"
+                rows="5"
+                placeholder="Enter the content of your test email..."
+              >
+This is a test email to verify deliverability.</textarea
+              >
+            </div>
+          </div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <label for="test-email">Send Test Email To</label>
+              <input
+                type="email"
+                id="test-email"
+                placeholder="test@deliverability-check.com"
+                value="test@deliverability-check.com"
+              />
+              <p class="input-hint">
+                <i class="fas fa-info-circle"></i> We'll send your test email to
+                this address
+              </p>
+            </div>
+          </div>
+          <div class="button-group">
+            <button id="run-advanced-test-btn">
+              <i class="fas fa-paper-plane"></i> Run Advanced Test
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="container" id="results-container" style="display: none">
+        <h2>Test Results</h2>
+        <div class="results">
+          <div id="test-result">
+            <!-- Test results will be displayed here -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- History Drawer -->
+    <div id="history-drawer" class="history-drawer">
+      <div class="drawer-header">
+        <h2>Recent Tests</h2>
+        <button class="drawer-close" id="history-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="history-list">
+        <!-- History items will be added here -->
+      </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Email Deliverability Tester Help</div>
+          <button class="modal-close" id="help-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-section">
+            <h3>About Email Deliverability Testing</h3>
+            <p>
+              The Email Deliverability Tester helps you determine whether your
+              emails are likely to reach your recipients' inboxes or be filtered
+              as spam. It checks:
+            </p>
+            <ul>
+              <li>
+                <strong>Authentication</strong> - Whether your emails pass SPF,
+                DKIM, and DMARC checks
+              </li>
+              <li>
+                <strong>Spam Filtering</strong> - How likely your email is to be
+                caught by spam filters
+              </li>
+              <li>
+                <strong>Infrastructure</strong> - Whether your email server is
+                properly configured
+              </li>
+              <li>
+                <strong>Content Analysis</strong> - Whether your email content
+                contains spam triggers
+              </li>
+            </ul>
+          </div>
+
+          <div class="modal-section">
+            <h3>How to Use This Tool</h3>
+            <ol>
+              <li>
+                <strong>Quick Test:</strong> Enter your email address and domain
+                to do a basic deliverability check.
+              </li>
+              <li>
+                <strong>Advanced Test:</strong> Customize the sender, subject,
+                content, and recipient for a more thorough test.
+              </li>
+              <li>
+                Click "Run Test" to send a test email and analyze the results.
+              </li>
+              <li>
+                Review your deliverability score, authentication results, and
+                recommendations.
+              </li>
+            </ol>
+          </div>
+
+          <div class="modal-section">
+            <h3>Understanding Test Results</h3>
+            <p>Your test results include:</p>
+            <ul>
+              <li>
+                <strong>Deliverability Score</strong> - Overall rating of how
+                likely your emails are to be delivered
+              </li>
+              <li>
+                <strong>Authentication Results</strong> - Whether your emails
+                pass SPF, DKIM, and DMARC
+              </li>
+              <li>
+                <strong>Spam Analysis</strong> - Factors that could trigger spam
+                filters
+              </li>
+              <li>
+                <strong>Recommendations</strong> - Specific steps to improve
+                deliverability
+              </li>
+            </ul>
+          </div>
+
+          <div class="modal-section">
+            <h3>Privacy Information</h3>
+            <p>
+              When you use the Email Deliverability Tester, we send a test email
+              from your provided address. We analyze the headers and content of
+              this email to determine deliverability metrics.
+            </p>
+            <p>
+              We do not store the content of your test emails. Test results are
+              stored temporarily to provide recommendations but are not shared
+              with third parties.
+            </p>
+            <p>
+              For advanced tests, we recommend using non-sensitive content in
+              your test emails.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2025 Neozeit Tools | By David Hill</p>
+    </footer>
+  </body>
+</html>

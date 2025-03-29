@@ -13,6 +13,7 @@
 @import "error_handling.css";
 @import "reputation.css";
 @import "ip_checker.css";
+@import "email_tester.css";
 
 /* Utilities and responsive styles (apply last) */
 @import "responsive.css";

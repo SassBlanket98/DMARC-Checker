@@ -2,6 +2,7 @@ import asyncio
 import sys
 import logging
 import ip_checker
+import email_tester
 
 # Windows-specific setup
 if sys.platform == 'win32':
@@ -442,6 +443,72 @@ def server_error(e):
             "If the problem persists, contact support"
         ]
     }), 500
+    
+@app.route('/email-tester')
+def email_tester_page():
+    """
+    Render the email deliverability tester page.
+
+    Returns:
+        HTML: The rendered email_tester.html page.
+    """
+    return render_template('email_tester.html')
+
+# Add this new route in the API Routes section
+@app.route("/api/email-test", methods=["POST"])
+@api_error_handler
+def test_email_deliverability():
+    """
+    Test email deliverability.
+
+    Request JSON body:
+        from_email (str): Sender email address
+        domain (str): Domain to test
+        test_type (str, optional): Type of test (basic or advanced)
+        from_name (str, optional): Sender name (for advanced test)
+        subject (str, optional): Email subject (for advanced test)
+        content (str, optional): Email content (for advanced test)
+        test_email (str, optional): Email to send test to (for advanced test)
+
+    Returns:
+        JSON: Email deliverability test results including score, recommendations, etc.
+    """
+    # Get JSON data from request
+    if not request.is_json:
+        raise DomainError(
+            "Request must be JSON",
+            "INVALID_REQUEST_FORMAT",
+            ["Please send a properly formatted JSON request."]
+        )
+    
+    test_data = request.get_json()
+    
+    # Run the test
+    try:
+        result = run_async(email_tester.run_email_test, test_data)
+        return jsonify(result)
+    except email_tester.ValidationError as e:
+        return jsonify({
+            "error": e.message,
+            "error_code": e.error_code,
+            "suggestions": e.suggestions
+        }), 400
+    except email_tester.SmtpError as e:
+        return jsonify({
+            "error": e.message,
+            "error_code": e.error_code,
+            "suggestions": e.suggestions
+        }), 500
+    except Exception as e:
+        logging.exception(f"Unexpected error in email test: {e}")
+        return jsonify({
+            "error": f"An unexpected error occurred: {str(e)}",
+            "error_code": "UNEXPECTED_ERROR",
+            "suggestions": [
+                "Please try again later.",
+                "If the problem persists, contact support."
+            ]
+        }), 500
 
 # Main Entry Point
 if __name__ == '__main__':
