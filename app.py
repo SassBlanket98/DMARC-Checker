@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import logging
+import ip_checker
 
 # Windows-specific setup
 if sys.platform == 'win32':
@@ -328,6 +329,82 @@ def is_valid_domain(domain):
     # This is a simplified version - consider a more robust validation for production
     pattern = r'^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$'
     return bool(re.match(pattern, domain))
+
+@app.route('/ip-checker')
+def ip_checker_page():
+    """
+    Render the IP checker page.
+
+    Returns:
+        HTML: The rendered ip_checker.html page.
+    """
+    return render_template('ip_checker.html')
+
+
+@app.route("/api/ip-info", methods=["GET"])
+@api_error_handler
+def get_ip_info():
+    """
+    Get information about an IP address.
+
+    Query Parameters:
+        ip (str, optional): The IP address to check. If not provided, returns information about the client's IP.
+
+    Returns:
+        JSON: Information about the IP address.
+    """
+    # Get the IP address from query parameters
+    ip_address = request.args.get("ip")
+    
+    # Get the client's IP address if no IP was provided
+    if not ip_address:
+        # Try to get real IP even when behind a proxy
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+        
+        # If we have multiple IPs in X-Forwarded-For, take the first one
+        if ip_address and ',' in ip_address:
+            ip_address = ip_address.split(',')[0].strip()
+        
+        # Fallback to remote_addr if still empty
+        if not ip_address:
+            ip_address = request.remote_addr
+    
+    # Validate IP format if an address was found
+    if ip_address and not is_valid_ip(ip_address):
+        raise DomainError(
+            f"Invalid IP address format: {ip_address}", 
+            "INVALID_IP_FORMAT",
+            [
+                "IP address should be in a valid IPv4 or IPv6 format.",
+                "IPv4 example: 192.168.1.1",
+                "IPv6 example: 2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+            ]
+        )
+    
+    # Get IP information
+    ip_info = run_async(ip_checker.get_complete_ip_info, ip_address)
+    
+    return jsonify(ip_info)
+
+def is_valid_ip(ip):
+    """
+    Validate IP address format.
+    
+    Args:
+        ip (str): IP address to validate
+        
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    import re
+    
+    # IPv4 pattern
+    ipv4_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+    
+    # Simplified IPv6 pattern
+    ipv6_pattern = r'^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::$|^::1$|^([0-9a-fA-F]{1,4}::?){1,7}[0-9a-fA-F]{1,4}$'
+    
+    return bool(re.match(ipv4_pattern, ip)) or bool(re.match(ipv6_pattern, ip))
 
 # HTML Routes
 @app.route('/')
