@@ -12,6 +12,9 @@
 @import "dmarc-visualizer.css";
 @import "error_handling.css";
 @import "reputation.css";
+@import "ip_checker.css";
+@import "email_tester.css";
+@import "email_auth_wizard.css";
 
 /* Utilities and responsive styles (apply last) */
 @import "responsive.css";

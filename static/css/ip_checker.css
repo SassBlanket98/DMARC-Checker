@@ -1,0 +1,207 @@
+/* ip_checker.css - Styles specific to the IP checker tool */
+
+.ip-info-container {
+  margin-top: 20px;
+}
+
+.ip-card {
+  border-radius: 8px;
+  background-color: var(--card-background);
+  border-left: 4px solid var(--primary-color);
+  margin-bottom: 20px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ip-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.ip-address-display {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  font-family: "Consolas", "Monaco", monospace;
+}
+
+.ip-version-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.ipv4-badge {
+  background-color: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.ipv6-badge {
+  background-color: rgba(155, 89, 182, 0.1);
+  color: #9b59b6;
+}
+
+.ip-copy-btn {
+  padding: 3px 8px;
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.ip-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.ip-data-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.ip-data-section h3 {
+  color: var(--primary-color);
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 1.1rem;
+}
+
+.ip-data-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ip-data-item i {
+  font-size: 1rem;
+  color: var(--primary-color);
+  margin-top: 2px;
+}
+
+.ip-data-label {
+  font-weight: 500;
+  min-width: 100px;
+}
+
+.ip-data-value {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.ip-map-container {
+  width: 100%;
+  height: 300px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #777;
+}
+
+.dark-mode .ip-map-container {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #aaa;
+}
+
+.ip-reputation {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: var(--card-background);
+  border-left: 4px solid var(--warning-color);
+}
+
+.reputation-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.reputation-score-container {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: white;
+}
+
+.score-good {
+  background-color: var(--success-color);
+}
+
+.score-medium {
+  background-color: var(--warning-color);
+}
+
+.score-poor {
+  background-color: var(--error-color);
+}
+
+.reputation-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.reputation-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reputation-item i {
+  font-size: 1rem;
+}
+
+.reputation-item i.good {
+  color: var(--success-color);
+}
+
+.reputation-item i.medium {
+  color: var(--warning-color);
+}
+
+.reputation-item i.poor {
+  color: var(--error-color);
+}
+
+.ip-recommendations {
+  margin-top: 20px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .ip-data-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .reputation-details {
+    grid-template-columns: 1fr;
+  }
+
+  .ip-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ip-copy-btn {
+    margin-left: 0;
+  }
+
+  .ip-map-container {
+    height: 200px;
+  }
+}

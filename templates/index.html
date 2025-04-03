@@ -66,12 +66,37 @@
         </div>
         <div class="app-title">
           <i class="fas fa-shield-alt"></i>
-          <span>DMARC, SPF, DKIM and DNS Checker</span>
+          <span>DMARC, SPF, DKIM and DNS Record Checker</span>
         </div>
         <nav>
           <ul>
-            <li>
-              <a href="#" class="active"><i class="fas fa-home"></i> Home</a>
+            <li class="nav-dropdown">
+              <a
+                href="#"
+                id="nav-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i class="fas fa-bars"></i> Tools
+                <i class="fas fa-caret-down"></i>
+              </a>
+              <div class="dropdown-menu" id="nav-dropdown-menu" role="menu">
+                <a href="/" role="menuitem" class="active"
+                  ><i class="fas fa-home"></i> Record Checker</a
+                >
+                <a href="/ip-checker" role="menuitem"
+                  ><i class="fas fa-network-wired"></i> IP Checker</a
+                >
+                <a href="/email-tester" role="menuitem"
+                  ><i class="fas fa-list-check"></i> Email Deliverability</a
+                >
+                <a href="/auth-wizard" role="menuitem"
+                  ><i class="fas fa-tools"></i> Email Auth Wizard</a
+                >
+                <a href="/header-analyzer" role="menuitem"
+                  ><i class="fas fa-info-circle"></i> Header Analyses</a
+                >
+              </div>
             </li>
             <li>
               <a href="#" id="help-link"

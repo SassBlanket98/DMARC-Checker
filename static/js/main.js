@@ -16,8 +16,10 @@ import {
   fixSelectorsContainerOnMobile,
   enhanceMobileToast,
   setupOrientationChangeHandler,
+  enhanceNavigationForMobile,
   // fixExportButtonSensitivity,
 } from "./mobile-enhancements.js";
+import { initNavigation, setupNavResizeHandler } from "./modules/navigation.js";
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", function () {
@@ -28,6 +30,10 @@ document.addEventListener("DOMContentLoaded", function () {
   loadHistoryFromStorage(); // Load history from storage if available
   initModals();
   initScoreMethodology();
+
+  // Initialize navigation dropdown
+  initNavigation();
+  setupNavResizeHandler();
 
   // Explicitly hide the overview container on page load
   const overviewContainer = document.getElementById("overview-container");
@@ -44,6 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fixSelectorsContainerOnMobile();
     enhanceMobileToast();
     setupOrientationChangeHandler();
+    enhanceNavigationForMobile();
     // Temporarily removed export button sensitivity fix
     // fixExportButtonSensitivity();
   }
