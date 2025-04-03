@@ -293,3 +293,66 @@
   color: #3498db;
   font-style: italic;
 }
+
+.parsed-data pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 8px;
+  border-radius: 4px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.dark-mode .parsed-data pre {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.parsed-data td {
+  vertical-align: top;
+  padding: 12px 15px;
+}
+
+.parsed-data td:nth-child(2) {
+  max-width: 250px;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.object-preview {
+  cursor: pointer;
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.blacklist-entry {
+  margin-bottom: 5px;
+  padding: 4px 8px;
+  background-color: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.reputation-score-value {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.reputation-score-poor {
+  color: var(--error-color);
+}
+
+.reputation-score-fair {
+  color: var(--warning-color);
+}
+
+.reputation-score-good {
+  color: var(--success-color);
+}
+
+.reputation-score-excellent {
+  color: var(--success-color);
+  font-weight: bold;
+}

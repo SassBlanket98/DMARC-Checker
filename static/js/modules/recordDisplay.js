@@ -308,9 +308,125 @@ function generateParsedDetailRows(record) {
         </tr>
       `;
     }
+  } else if (record.title === "REPUTATION") {
+    // Special handling for reputation records viewed individually
+    // When viewing reputation individually, grab data from record.value
+    const reputationData = record.value || {};
+
+    if (Object.keys(reputationData).length > 0) {
+      // Generate rows from the reputation data
+      parsedDetailRows = Object.entries(reputationData)
+        .filter(
+          ([key]) =>
+            !key.startsWith("error") &&
+            key !== "suggestions" &&
+            typeof key !== "object"
+        )
+        .map(
+          ([key, value]) => `
+        <tr>
+          <td><strong>${key}</strong></td>
+          <td>${formatReputationValue(key, value)}</td>
+          <td>${getExplanation(key, "reputation")}</td>
+        </tr>
+      `
+        )
+        .join("");
+    }
   }
 
   return parsedDetailRows;
+}
+
+function formatReputationValue(key, value) {
+  // Format the values nicely
+  if (value === null || value === undefined) {
+    return "Not available";
+  }
+
+  // Handle different keys with specific formatting
+  switch (key) {
+    case "reputation_score":
+      // Add color-coding based on score
+      let scoreClass = "";
+      if (value >= 90) scoreClass = "reputation-score-excellent";
+      else if (value >= 70) scoreClass = "reputation-score-good";
+      else if (value >= 50) scoreClass = "reputation-score-fair";
+      else scoreClass = "reputation-score-poor";
+
+      return `<span class="reputation-score-value ${scoreClass}">${value}/100</span>`;
+
+    case "blacklisted":
+      return value
+        ? '<span style="color: var(--error-color);"><i class="fas fa-times-circle"></i> Yes</span>'
+        : '<span style="color: var(--success-color);"><i class="fas fa-check-circle"></i> No</span>';
+
+    case "blacklist_details":
+      if (Array.isArray(value) && value.length > 0) {
+        return value
+          .map(
+            (item) =>
+              `<div class="blacklist-entry"><i class="fas fa-exclamation-triangle"></i> ${item}</div>`
+          )
+          .join("");
+      }
+      return "None";
+
+    case "domain_services":
+    case "ip_services":
+      if (typeof value === "object") {
+        try {
+          return `<pre>${JSON.stringify(value, null, 2)}</pre>`;
+        } catch (e) {
+          return "Complex object";
+        }
+      }
+      return String(value);
+
+    case "recommendations":
+      if (Array.isArray(value) && value.length > 0) {
+        return value
+          .map((rec) => {
+            if (typeof rec === "object") {
+              return `<div class="recommendation-preview">
+              <strong>${rec.title || "Recommendation"}:</strong> ${
+                rec.description || JSON.stringify(rec)
+              }
+            </div>`;
+            }
+            return String(rec);
+          })
+          .join("<br>");
+      }
+      return "No recommendations";
+
+    default:
+      // Handle boolean values
+      if (typeof value === "boolean") {
+        return value ? "Yes" : "No";
+      }
+
+      // Handle objects
+      if (typeof value === "object") {
+        if (Array.isArray(value)) {
+          // For arrays of strings, join them with line breaks
+          if (value.length > 0 && typeof value[0] === "string") {
+            return value.join("<br>");
+          }
+          return `Array with ${value.length} items`;
+        }
+
+        // For objects, show a JSON representation
+        try {
+          return `<pre>${JSON.stringify(value, null, 2)}</pre>`;
+        } catch (e) {
+          return "Complex object";
+        }
+      }
+
+      // Return the value as a string for all other cases
+      return String(value);
+  }
 }
 
 // Helper function to generate recommendations
@@ -487,10 +603,12 @@ export function getExplanation(key, recordType) {
       reputation_score: "Overall reputation score of the domain (0-100)",
       blacklisted: "Whether the domain is on any checked blacklists",
       blacklist_count: "Number of blacklists the domain is listed on",
+      blacklist_details: "List of blacklists the domain is found on",
       total_services: "Total number of blacklist services checked",
       domain_services: "Status of domain-based blacklist checks",
       ip_services: "Status of IP-based blacklist checks",
       recommendations: "Suggestions for improving domain reputation",
+      overall_status: "Overall status of domain reputation check",
     },
   };
 

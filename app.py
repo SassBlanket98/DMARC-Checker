@@ -217,6 +217,17 @@ def get_record(record_type):
             [f"Supported record types are: {', '.join(valid_record_types)}"]
         )
 
+    # Fetch the appropriate record type with enhanced error handling
+    if record_type == "reputation":
+        data = run_async(reputation_check.check_domain_reputation, domain)
+        # Ensure the data is properly structured for parsing
+        if "error" not in data:
+            return jsonify({
+                "parsed_record": data,  # Explicitly include the data as parsed_record
+                **data  # Also include all the original data fields
+            })
+        return jsonify(data)
+    
     # Parse selectors into a list if provided
     selectors = [sel.strip() for sel in raw_selectors.split(",") if sel.strip()] or None
 
@@ -310,6 +321,10 @@ def check_reputation():
 
     # Fetch reputation data
     reputation_data = run_async(reputation_check.check_domain_reputation, domain)
+    
+    # Add parsed_record to ensure consistency with overview endpoint
+    if "error" not in reputation_data:
+        reputation_data["parsed_record"] = reputation_data.copy()
     
     return jsonify(reputation_data)
 

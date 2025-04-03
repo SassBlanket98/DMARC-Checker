@@ -109,6 +109,12 @@ export async function checkRecord() {
       // Update the overview dashboard with correct statuses
       updateOverviewDashboard(data.records);
     } else {
+      // For reputation record type, make sure we have parsed_record for tab display
+      if (recordType === "reputation" && !data.parsed_record && !data.error) {
+        // If we don't have parsed_record but have valid data,
+        // create a parsed_record property from the data itself
+        data.parsed_record = { ...data };
+      }
       // Render single record
       resultBox.innerHTML = renderDetailedRecord(recordType, data);
     }
