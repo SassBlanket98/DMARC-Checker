@@ -7,12 +7,19 @@ export function renderReputationData(data) {
       <div class="reputation-error">
         <i class="fas fa-exclamation-triangle"></i>
         <p>Error checking domain reputation: ${data.error}</p>
+        ${
+          data.error_code
+            ? `<div class="error-code">Code: ${data.error_code}</div>`
+            : ""
+        }
       </div>
     `;
   }
 
-  // Get reputation score
-  const reputationScore = data.reputation_score || 0;
+  // Get reputation score and service names map
+  const reputationScore =
+    data.reputation_score !== undefined ? data.reputation_score : 0;
+  const serviceNames = data.service_names || {}; // Get the friendly names map
 
   // Determine status color based on score
   let statusClass, statusText;
@@ -35,7 +42,7 @@ export function renderReputationData(data) {
   const blacklistCount = data.blacklist_count || 0;
   const totalServices = data.total_services || 0;
 
-  // Generate blacklist details HTML
+  // Generate blacklist details HTML using friendly names
   let blacklistDetailsHtml = "";
   if (
     blacklisted &&
@@ -43,12 +50,16 @@ export function renderReputationData(data) {
     data.blacklist_details.length > 0
   ) {
     const detailsItems = data.blacklist_details
-      .map((item) => `<li class="blacklist-item">${item}</li>`)
+      .map((item) => {
+        // Use the friendly name if available
+        const serviceName = serviceNames[item] || item;
+        return `<li class="blacklist-item">${serviceName}</li>`;
+      })
       .join("");
 
     blacklistDetailsHtml = `
       <div class="blacklist-details">
-        <h4>Blacklisted On:</h4>
+        <h4>Blacklisted On (${blacklistCount}):</h4>
         <ul class="blacklist-list">
           ${detailsItems}
         </ul>
@@ -56,71 +67,64 @@ export function renderReputationData(data) {
     `;
   }
 
-  // Generate IP information HTML
-  let ipDetailsHtml = "";
-  if (data.ip_services) {
-    const ipItems = Object.entries(data.ip_services)
-      .map(([ip, services]) => {
-        const hasBlacklisting = Object.values(services).some(
-          (status) => status !== "clean"
-        );
-        const statusClass = hasBlacklisting ? "status-error" : "status-success";
-        const statusIcon = hasBlacklisting
-          ? '<i class="fas fa-times-circle"></i>'
-          : '<i class="fas fa-check-circle"></i>';
+  // --- Improved Domain/IP Service Details ---
+  let serviceChecksHtml = "<p>No detailed service checks available.</p>"; // Default message
 
-        return `
-        <div class="ip-detail ${statusClass}">
-          <div class="ip-header">
-            ${statusIcon} IP: ${ip}
-          </div>
-          <div class="ip-services">
-            ${
-              Object.entries(services)
-                .filter(([_, status]) => status !== "clean")
-                .map(
-                  ([service, status]) =>
-                    `<div class="ip-service-item">${service}: ${status}</div>`
-                )
-                .join("") ||
-              '<div class="ip-service-clean">No blacklistings found</div>'
-            }
-          </div>
-        </div>
-      `;
-      })
-      .join("");
-
-    if (ipItems) {
-      ipDetailsHtml = `
-        <div class="ip-details-section">
-          <h4>IP Reputation:</h4>
-          ${ipItems}
-        </div>
-      `;
-    }
-  }
-
-  // Generate recommendations HTML
-  let recommendationsHtml = "";
-  if (data.recommendations && data.recommendations.length > 0) {
-    const recItems = data.recommendations
-      .map(
-        (rec) =>
-          `<div class="recommendation ${rec.priority}-priority">
-        <h4>${rec.title}</h4>
-        <p>${rec.description}</p>
-      </div>`
-      )
-      .join("");
-
-    recommendationsHtml = `
-      <div class="reputation-recommendations">
-        <h4>Recommendations:</h4>
-        ${recItems}
+  // Domain Service Check Summary
+  let domainServiceSummary = "";
+  const domainServicesCount = data.domain_services
+    ? Object.keys(data.domain_services).length
+    : 0; // Get actual count
+  if (domainServicesCount > 0) {
+    const domainBlacklistedCount = Object.values(data.domain_services).filter(
+      (status) => status === "blacklisted"
+    ).length;
+    // **Modified Line:** Be specific about domain services
+    domainServiceSummary = `
+      <div class="service-check-summary">
+        <i class="fas fa-globe"></i> <strong>Domain-Specific Checks:</strong> ${domainBlacklistedCount} blacklisting(s) found across ${domainServicesCount} domain services checked.
       </div>
     `;
   }
+
+  // IP Service Check Summary
+  let ipServiceSummary = "";
+  if (data.ip_services && Object.keys(data.ip_services).length > 0) {
+    const ipCount = Object.keys(data.ip_services).length;
+    let totalIpBlacklistings = 0;
+    Object.values(data.ip_services).forEach((services) => {
+      totalIpBlacklistings += Object.values(services).filter((status) =>
+        status.startsWith("blacklisted")
+      ).length;
+    });
+
+    ipServiceSummary = `
+      <div class="service-check-summary">
+        <i class="fas fa-network-wired"></i> <strong>IP Checks (${ipCount} IPs):</strong> ${totalIpBlacklistings} blacklisting(s) found.
+      </div>
+    `;
+    // (Optional: Add detailed breakdown per IP if needed)
+  }
+
+  if (domainServiceSummary || ipServiceSummary) {
+    serviceChecksHtml = `
+       <div class="service-checks-section">
+         <h4>Blacklist Service Checks:</h4>
+         ${
+           domainServiceSummary ||
+           "<p>No domain-specific checks performed or data available.</p>"
+         }
+         ${
+           ipServiceSummary ||
+           "<p>No IP address checks performed or data available.</p>"
+         }
+         <p class="total-services-note">Note: A total of ${
+           data.total_services || "N/A"
+         } blacklist services (domain and IP combined) were queried.</p> 
+       </div>
+     `;
+  }
+  // --- End of Improved Service Details ---
 
   // Create the complete reputation data display
   return `
@@ -139,7 +143,7 @@ export function renderReputationData(data) {
             }">
               ${
                 blacklisted
-                  ? `<i class="fas fa-times-circle"></i> Blacklisted on ${blacklistCount} services`
+                  ? `<i class="fas fa-times-circle"></i> Blacklisted (${blacklistCount})`
                   : `<i class="fas fa-check-circle"></i> Not blacklisted`
               }
             </div>
@@ -152,8 +156,8 @@ export function renderReputationData(data) {
         </div>
       </div>
       
-      ${blacklistDetailsHtml}
-      ${ipDetailsHtml}
+      ${blacklistDetailsHtml} 
+      ${serviceChecksHtml} 
       
       <div class="reputation-explanation">
         <p>Domain reputation affects email deliverability. Being on email blacklists can cause your messages to be blocked or sent to spam folders.</p>
