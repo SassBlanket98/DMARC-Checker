@@ -6,6 +6,7 @@
   .header-container {
     flex-direction: column;
     padding: 1rem;
+    align-items: center;
   }
 
   .app-title {
@@ -26,22 +27,57 @@
   /* Improved navigation menu */
   nav {
     width: 100%;
+    margin-top: 10px;
   }
 
   nav ul {
-    flex-wrap: wrap;
+    flex-direction: row;
     justify-content: center;
+    flex-wrap: wrap;
     padding: 0;
+    align-items: center;
   }
 
   nav ul li {
-    margin: 5px;
+    width: auto;
+    margin: 5px 10px;
   }
 
   nav ul li a {
-    display: block;
+    display: inline-block;
     padding: 8px 12px;
     font-size: 0.9rem;
+  }
+
+  .dropdown-menu {
+    position: absolute; /* CHANGE back to absolute */
+    top: 100%; /* Position below the parent li */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--primary-color); /* Ensure it has a background */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    margin-top: 5px;
+    min-width: 180px;
+    /* Keep visibility/opacity toggles */
+    opacity: 0;
+    visibility: hidden;
+    max-height: 0;
+    transition: opacity 0.3s, visibility 0.3s, max-height 0.3s;
+    /* Removed overflow: hidden to let transition work */
+  }
+
+  /* Ensure the .show class works correctly */
+  .dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    max-height: 300px; /* Allow height to expand */
+  }
+
+  .dropdown-menu a {
+    padding: 10px 15px;
+    display: block; /* Items inside stack vertically */
+    color: white;
   }
 
   /* Form and Input Adjustments */
