@@ -109,7 +109,10 @@ export function renderDetailedRecordCard(record, index) {
   let recommendations = generateRecommendations(record);
 
   // Check if this is a DMARC or SPF record (which will only have 2 tabs)
-  const isSimplifiedView = record.title === "DMARC" || record.title === "SPF";
+  const isSimplifiedView =
+    record.title === "DMARC" ||
+    record.title === "SPF" ||
+    record.title === "REPUTATION";
 
   // Create the tabs HTML based on record type
   const tabsHtml = isSimplifiedView
