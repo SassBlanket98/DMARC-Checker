@@ -1,10 +1,10 @@
 import asyncio
 import sys
 import logging
-import ip_checker
 import email_tester
-import auth_verification
 import datetime
+import reputation
+
 
 # Windows-specific setup
 if sys.platform == 'win32':
@@ -13,7 +13,6 @@ if sys.platform == 'win32':
 import logging
 from flask import Flask, request, jsonify, render_template
 import dmarc_lookup
-import reputation_check
 from concurrent.futures import ThreadPoolExecutor
 from error_handling import (
     api_error_handler, 
@@ -23,7 +22,7 @@ from error_handling import (
     handle_dkim_error,
     DomainError
 )
-from auth_verification import verify_spf_setup, verify_dkim_setup, verify_dmarc_setup, calculate_overall_auth_status
+from dmarc_lookup import verify_spf_setup, verify_dkim_setup, verify_dmarc_setup, calculate_overall_auth_status
 
 
 logging.getLogger('werkzeug').setLevel(logging.INFO)
@@ -161,7 +160,7 @@ def overview():
     dns_data = run_async(dmarc_lookup.get_all_dns_records, domain)
     
     # Now also fetch reputation data
-    reputation_data = run_async(reputation_check.check_domain_reputation, domain)
+    reputation_data = run_async(reputation.check_domain_reputation, domain)
 
     # Aggregate all records into a response
     overview_data = {
@@ -225,7 +224,7 @@ def get_record(record_type):
 
     # Fetch the appropriate record type with enhanced error handling
     if record_type == "reputation":
-        data = run_async(reputation_check.check_domain_reputation, domain)
+        data = run_async(reputation.check_domain_reputation, domain)
         # Ensure the data is properly structured for parsing
         if "error" not in data:
             return jsonify({
@@ -277,7 +276,7 @@ def get_record(record_type):
         elif record_type == "dns":
             data = run_async(dmarc_lookup.get_all_dns_records, domain)
         elif record_type == "reputation":
-            data = run_async(reputation_check.check_domain_reputation, domain)
+            data = run_async(reputation.check_domain_reputation, domain)
 
         # Return the fetched data as a JSON response
         return jsonify(data)
@@ -326,7 +325,7 @@ def check_reputation():
         )
 
     # Fetch reputation data
-    reputation_data = run_async(reputation_check.check_domain_reputation, domain)
+    reputation_data = run_async(reputation.check_domain_reputation, domain)
     
     # Add parsed_record to ensure consistency with overview endpoint
     if "error" not in reputation_data:
@@ -402,7 +401,7 @@ def get_ip_info():
         )
     
     # Get IP information
-    ip_info = run_async(ip_checker.get_complete_ip_info, ip_address)
+    ip_info = run_async(reputation.get_complete_ip_info, ip_address)
     
     return jsonify(ip_info)
 
