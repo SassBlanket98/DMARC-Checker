@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#b22222" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+
+    <!-- For better support across browsers and devices -->
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <title>IP Checker - Neozeit</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/ip_checker.js') }}"
+    ></script>
+  </head>
+  <body>
+    <header>
+      <div class="header-container">
+        <div class="logo">
+          <img
+            src="{{ url_for('static', filename='images/Neozeit.png') }}"
+            alt="Neozeit Logo"
+          />
+        </div>
+        <div class="app-title">
+          <i class="fas fa-network-wired"></i>
+          <span>IP Checker Tool</span>
+        </div>
+        <nav>
+          <ul>
+            <li class="nav-dropdown">
+              <a
+                href="#"
+                id="nav-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i class="fas fa-bars"></i> Tools
+                <i class="fas fa-caret-down"></i>
+              </a>
+              <div class="dropdown-menu" id="nav-dropdown-menu" role="menu">
+                <a href="/" role="menuitem"
+                  ><i class="fas fa-home"></i> Record Checker</a
+                >
+                <a href="/ip-checker" role="menuitem" class="active"
+                  ><i class="fas fa-network-wired"></i> IP Checker</a
+                >
+                <a href="/email-tester" role="menuitem"
+                  ><i class="fas fa-envelope"></i> Email Deliverability</a
+                >
+                <a href="/auth-wizard" role="menuitem"
+                  ><i class="fas fa-tools"></i> Email Auth Wizard</a
+                >
+                <a href="/header-analyzer" role="menuitem"
+                  ><i class="fas fa-info-circle"></i> Header Analyzer</a
+                >
+              </div>
+            </li>
+            <li>
+              <a href="#" id="help-link"
+                ><i class="fas fa-question-circle"></i> Help</a
+              >
+            </li>
+            <li>
+              <a href="#" id="history-link"
+                ><i class="fas fa-history"></i> History</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="controls">
+        <button class="theme-toggle" aria-label="Toggle dark mode">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="container">
+        <h2>IP Address Information Tool</h2>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="ip-address"
+              placeholder="Enter an IP address (leave empty to check your current IP)"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="check-ip-btn">
+            <i class="fas fa-search"></i> Check IP
+          </button>
+          <button id="check-current-ip-btn" class="secondary">
+            <i class="fas fa-user-check"></i> Check My IP
+          </button>
+        </div>
+      </div>
+
+      <div class="container">
+        <h2>IP Information</h2>
+        <div class="results">
+          <div id="ip-result">
+            Enter an IP address or check your current IP to see results here.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- History Drawer -->
+    <div id="history-drawer" class="history-drawer">
+      <div class="drawer-header">
+        <h2>Recent Lookups</h2>
+        <button class="drawer-close" id="history-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="history-list">
+        <!-- History items will be added here -->
+      </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">IP Checker Help & Information</div>
+          <button class="modal-close" id="help-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-section">
+            <h3>About IP Checker</h3>
+            <p>
+              IP Checker allows you to retrieve detailed information about any
+              IP address, including:
+            </p>
+            <ul>
+              <li>
+                <strong>Geolocation</strong> - City, region, and country
+                associated with the IP
+              </li>
+              <li>
+                <strong>Network Information</strong> - ISP, ASN, and connection
+                details
+              </li>
+              <li>
+                <strong>IP Reputation</strong> - Security and trustworthiness
+                indicators
+              </li>
+              <li>
+                <strong>Technical Details</strong> - IP version and other
+                characteristics
+              </li>
+            </ul>
+          </div>
+
+          <div class="modal-section">
+            <h3>How to Use This Tool</h3>
+            <ol>
+              <li>
+                Enter an IP address in the input field, or leave it empty to
+                check your current IP.
+              </li>
+              <li>
+                Click "Check IP" to retrieve information about the specified IP
+                address.
+              </li>
+              <li>
+                Alternatively, click "Check My IP" to instantly check your
+                current public IP address.
+              </li>
+              <li>
+                View the detailed information, including geolocation, network
+                details, and reputation.
+              </li>
+            </ol>
+          </div>
+
+          <div class="modal-section">
+            <h3>IP Types</h3>
+            <p>There are two main types of IP addresses:</p>
+            <ul>
+              <li>
+                <strong>IPv4</strong> - The original IP address format (e.g.,
+                192.168.1.1) consisting of four sets of numbers separated by
+                periods.
+              </li>
+              <li>
+                <strong>IPv6</strong> - The newer IP address format (e.g.,
+                2001:0db8:85a3:0000:0000:8a2e:0370:7334) designed to overcome
+                IPv4 address exhaustion.
+              </li>
+            </ul>
+          </div>
+
+          <div class="modal-section">
+            <h3>Privacy Information</h3>
+            <p>
+              When using the "Check My IP" feature, the tool retrieves your
+              public IP address - the identifier that your internet service
+              provider assigns to your internet connection. This is the IP
+              address that websites and online services see when you connect to
+              them.
+            </p>
+            <p>
+              We do not store IP addresses or any information associated with
+              them. All lookups are performed in real-time and the data is not
+              saved to any database.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2025 Neozeit Tools | By David Hill</p>
+    </footer>
+  </body>
+</html>

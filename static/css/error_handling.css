@@ -1,0 +1,251 @@
+/* Enhanced Error Handling Styles */
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  min-width: 250px;
+  max-width: 400px;
+  padding: 12px 15px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--card-background);
+  border-left: 4px solid var(--info-color);
+  opacity: 0;
+  transform: translateX(50px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.toast-error {
+  border-left-color: var(--error-color);
+}
+
+.toast-warning {
+  border-left-color: var(--warning-color);
+}
+
+.toast-success {
+  border-left-color: var(--success-color);
+}
+
+.toast-info {
+  border-left-color: var(--info-color);
+}
+
+.toast-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-hiding {
+  opacity: 0;
+  transform: translateX(50px);
+}
+
+.toast-icon {
+  margin-right: 12px;
+  font-size: 1.2rem;
+}
+
+.toast-error .toast-icon {
+  color: var(--error-color);
+}
+
+.toast-warning .toast-icon {
+  color: var(--warning-color);
+}
+
+.toast-success .toast-icon {
+  color: var(--success-color);
+}
+
+.toast-info .toast-icon {
+  color: var(--info-color);
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 10px;
+  font-size: 0.9rem;
+}
+
+/* Error Messages */
+.error-code {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 5px;
+}
+
+.suggestions-container {
+  margin-top: 8px;
+}
+
+.suggestions-list {
+  margin-top: 5px;
+  padding-left: 20px;
+}
+
+.suggestions-list li {
+  margin-bottom: 3px;
+  font-size: 0.9rem;
+}
+
+/* Retry/Recovery Buttons */
+.recovery-button {
+  margin-top: 10px;
+  padding: 8px 15px;
+  background-color: var(--info-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.3s;
+}
+
+.recovery-button:hover {
+  background-color: #2980b9;
+}
+
+/* Error Levels */
+.issue-error {
+  background-color: rgba(231, 76, 60, 0.1);
+  border-left: 4px solid var(--error-color);
+}
+
+.issue-error .issue-icon {
+  color: var(--error-color);
+}
+
+.issue-warning {
+  background-color: rgba(243, 156, 18, 0.1);
+  border-left: 4px solid var(--warning-color);
+}
+
+.issue-warning .issue-icon {
+  color: var(--warning-color);
+}
+
+.issue-info {
+  background-color: rgba(52, 152, 219, 0.1);
+  border-left: 4px solid var(--info-color);
+}
+
+.issue-info .issue-icon {
+  color: var(--info-color);
+}
+
+/* Offline Detection */
+.offline-warning {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.offline-warning.visible {
+  display: flex;
+}
+
+.dark-mode .offline-warning {
+  background-color: #2c2c2c;
+  color: #f8d7da;
+}
+
+/* Spinner with text */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  gap: 15px;
+}
+
+.loading-container .spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color);
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+.dark-mode .loading-container .spinner {
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid var(--primary-color);
+}
+
+/* Record validation status indicators */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.status-success {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: var(--success-color);
+}
+
+.status-error {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: var(--error-color);
+}
+
+.status-warning {
+  background-color: rgba(243, 156, 18, 0.2);
+  color: var(--warning-color);
+}
+
+.status-info {
+  background-color: rgba(52, 152, 219, 0.2);
+  color: var(--info-color);
+}
+
+.status-pending {
+  background-color: rgba(189, 195, 199, 0.2);
+  color: #7f8c8d;
+}
+
+/* Retry animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.retry-spin {
+  animation: spin 1s linear infinite;
+}

@@ -1,0 +1,20 @@
+/* main.css - The central file that imports all other CSS modules */
+
+/* Core styles */
+@import "base.css";
+@import "layout.css";
+@import "components.css";
+
+/* Feature-specific styles */
+@import "records.css";
+@import "modals.css";
+@import "score.css";
+@import "dmarc-visualizer.css";
+@import "error_handling.css";
+@import "reputation.css";
+@import "ip_checker.css";
+@import "email_tester.css";
+@import "email_auth_wizard.css";
+
+/* Utilities and responsive styles (apply last) */
+@import "responsive.css";

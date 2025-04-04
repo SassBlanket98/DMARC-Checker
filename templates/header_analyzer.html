@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#b22222" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+
+    <!-- For better support across browsers and devices -->
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <title>Email Header Analyzer - Neozeit</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/header_analyzer.css') }}"
+    />
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/header_analyzer.js') }}"
+    ></script>
+  </head>
+  <body>
+    <header>
+      <div class="header-container">
+        <div class="logo">
+          <img
+            src="{{ url_for('static', filename='images/Neozeit.png') }}"
+            alt="Neozeit Logo"
+          />
+        </div>
+        <div class="app-title">
+          <i class="fas fa-envelope-open-text"></i>
+          <span>Email Header Analyzer</span>
+        </div>
+        <nav>
+          <ul>
+            <li class="nav-dropdown">
+              <a
+                href="#"
+                id="nav-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i class="fas fa-bars"></i> Tools
+                <i class="fas fa-caret-down"></i>
+              </a>
+              <div class="dropdown-menu" id="nav-dropdown-menu" role="menu">
+                <a href="/" role="menuitem"
+                  ><i class="fas fa-home"></i> Record Checker</a
+                >
+                <a href="/ip-checker" role="menuitem"
+                  ><i class="fas fa-network-wired"></i> IP Checker</a
+                >
+                <a href="/email-tester" role="menuitem"
+                  ><i class="fas fa-envelope"></i> Email Deliverability</a
+                >
+                <a href="/auth-wizard" role="menuitem"
+                  ><i class="fas fa-tools"></i> Email Auth Wizard</a
+                >
+                <a href="/header-analyzer" role="menuitem" class="active"
+                  ><i class="fas fa-envelope-open-text"></i> Header Analyzer</a
+                >
+              </div>
+            </li>
+            <li>
+              <a href="#" id="help-link"
+                ><i class="fas fa-question-circle"></i> Help</a
+              >
+            </li>
+            <li>
+              <a href="#" id="history-link"
+                ><i class="fas fa-history"></i> History</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="controls">
+        <button class="theme-toggle" aria-label="Toggle dark mode">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="container">
+        <h2>Email Header Analyzer</h2>
+        <p>
+          Paste your email headers below to analyze authentication results,
+          email path, and detect potential issues with your email delivery.
+        </p>
+
+        <div class="input-section">
+          <div class="textarea-container">
+            <textarea
+              id="email-headers"
+              placeholder="Paste raw email headers here..."
+              rows="10"
+            ></textarea>
+
+            <div class="button-row">
+              <button id="analyze-btn" class="primary-btn">
+                <i class="fas fa-search"></i> Analyze Headers
+              </button>
+              <button id="clear-btn" class="secondary-btn">
+                <i class="fas fa-trash"></i> Clear
+              </button>
+              <button id="sample-btn" class="secondary-btn">
+                <i class="fas fa-vial"></i> Load Sample
+              </button>
+            </div>
+          </div>
+
+          <div class="instructions">
+            <h3>How to find email headers</h3>
+            <div class="email-clients">
+              <div class="email-client">
+                <h4><i class="fab fa-google"></i> Gmail</h4>
+                <ol>
+                  <li>Open the email</li>
+                  <li>Click the three dots (More actions)</li>
+                  <li>Select "Show original"</li>
+                  <li>Copy all content in the "Original Message" box</li>
+                </ol>
+              </div>
+
+              <div class="email-client">
+                <h4><i class="fab fa-microsoft"></i> Outlook</h4>
+                <ol>
+                  <li>
+                    Double click on the email to open in in another window
+                  </li>
+                  <li>Click on "File", then click on "Properties"</li>
+                  <li>
+                    Find the "Internet headers" box at the bottom of the window
+                  </li>
+                  <li>Copy all the header information</li>
+                </ol>
+              </div>
+
+              <div class="email-client">
+                <h4><i class="fab fa-apple"></i> Apple Mail</h4>
+                <ol>
+                  <li>Open the email</li>
+                  <li>Select View > Message > All Headers</li>
+                  <li>Copy all the displayed header information</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container results-container hidden" id="results-container">
+        <h2>Analysis Results</h2>
+        <div class="results" id="analysis-results">
+          <!-- Results will be dynamically inserted here -->
+        </div>
+      </div>
+    </main>
+
+    <!-- History Drawer -->
+    <div id="history-drawer" class="history-drawer">
+      <div class="drawer-header">
+        <h2>Recent Analyses</h2>
+        <button class="drawer-close" id="history-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="history-list">
+        <!-- History items will be added here -->
+      </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Email Header Analyzer Help</div>
+          <button class="modal-close" id="help-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-section">
+            <h3>About Email Headers</h3>
+            <p>
+              Email headers contain detailed information about an email's
+              journey, including:
+            </p>
+            <ul>
+              <li>
+                <strong>Authentication Results</strong> - SPF, DKIM, and DMARC
+                validation status
+              </li>
+              <li>
+                <strong>Email Path</strong> - The servers the email passed
+                through
+              </li>
+              <li>
+                <strong>Timing Information</strong> - When the email was sent
+                and received
+              </li>
+              <li>
+                <strong>Sender Information</strong> - Details about the sender's
+                email server
+              </li>
+              <li>
+                <strong>Message IDs</strong> - Unique identifiers for tracking
+                the email
+              </li>
+            </ul>
+            <p>
+              This analyzer helps you interpret these complex headers and
+              identify potential issues with email delivery or security.
+            </p>
+          </div>
+
+          <div class="modal-section">
+            <h3>How to Use This Tool</h3>
+            <ol>
+              <li>
+                Obtain the email headers from your email client using the
+                instructions provided.
+              </li>
+              <li>Paste the complete headers into the text box.</li>
+              <li>Click "Analyze Headers" to process the information.</li>
+              <li>
+                Review the analysis results, which will show authentication
+                status, email path, and potential issues.
+              </li>
+            </ol>
+          </div>
+
+          <div class="modal-section">
+            <h3>Understanding the Results</h3>
+            <p>The analysis is divided into several sections:</p>
+            <ul>
+              <li>
+                <strong>Authentication Summary</strong> - Shows if the email
+                passed SPF, DKIM, and DMARC checks
+              </li>
+              <li>
+                <strong>Email Journey</strong> - Displays the path the email
+                took from sender to recipient
+              </li>
+              <li>
+                <strong>Timeline</strong> - Shows how long the email took at
+                each hop
+              </li>
+              <li>
+                <strong>Header Details</strong> - Important individual headers
+                with explanations
+              </li>
+              <li>
+                <strong>Security Analysis</strong> - Potential security concerns
+                identified in the headers
+              </li>
+            </ul>
+          </div>
+
+          <div class="modal-section">
+            <h3>Privacy Information</h3>
+            <p>
+              Email headers can contain sensitive information. This tool
+              processes all data in your browser - no headers are stored on our
+              servers or shared with third parties. For the most private
+              experience, we recommend removing any personal information before
+              analysis.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2025 Neozeit Tools | By David Hill</p>
+    </footer>
+  </body>
+</html>
