@@ -109,7 +109,10 @@ export function renderDetailedRecordCard(record, index) {
   let recommendations = generateRecommendations(record);
 
   // Check if this is a DMARC or SPF record (which will only have 2 tabs)
-  const isSimplifiedView = record.title === "DMARC" || record.title === "SPF";
+  const isSimplifiedView =
+    record.title === "DMARC" ||
+    record.title === "SPF" ||
+    record.title === "REPUTATION";
 
   // Create the tabs HTML based on record type
   const tabsHtml = isSimplifiedView
@@ -373,15 +376,36 @@ function formatReputationValue(key, value) {
       return "None";
 
     case "domain_services":
-    case "ip_services":
-      if (typeof value === "object") {
-        try {
-          return `<pre>${JSON.stringify(value, null, 2)}</pre>`;
-        } catch (e) {
-          return "Complex object";
-        }
+      if (typeof value === "object" && Object.keys(value).length > 0) {
+        const total = Object.keys(value).length;
+        const failed = Object.values(value).filter(
+          (status) =>
+            status === "blacklisted" ||
+            status === "error" ||
+            status === "timeout"
+        ).length;
+        return `Checked ${total} domain services. ${
+          failed > 0 ? `${failed} issue(s) found.` : "All clean."
+        }`;
       }
-      return String(value);
+      return "No domain services checked or data unavailable.";
+
+    case "ip_services":
+      if (typeof value === "object" && Object.keys(value).length > 0) {
+        const ipCount = Object.keys(value).length;
+        let totalIssues = 0;
+        Object.values(value).forEach((services) => {
+          totalIssues += Object.values(services).filter(
+            (status) => status !== "clean"
+          ).length;
+        });
+        return `Checked ${ipCount} IP(s). ${
+          totalIssues > 0
+            ? `${totalIssues} issue(s) found across IPs.`
+            : "All IPs clean."
+        }`;
+      }
+      return "No IP services checked or data unavailable.";
 
     case "recommendations":
       if (Array.isArray(value) && value.length > 0) {
@@ -405,26 +429,13 @@ function formatReputationValue(key, value) {
       if (typeof value === "boolean") {
         return value ? "Yes" : "No";
       }
-
-      // Handle objects
-      if (typeof value === "object") {
-        if (Array.isArray(value)) {
-          // For arrays of strings, join them with line breaks
-          if (value.length > 0 && typeof value[0] === "string") {
-            return value.join("<br>");
-          }
-          return `Array with ${value.length} items`;
-        }
-
-        // For objects, show a JSON representation
-        try {
-          return `<pre>${JSON.stringify(value, null, 2)}</pre>`;
-        } catch (e) {
-          return "Complex object";
-        }
+      if (value === null || value === undefined) {
+        return "Not available";
       }
-
-      // Return the value as a string for all other cases
+      // For complex objects/arrays not handled specifically, show a placeholder
+      if (typeof value === "object") {
+        return "[Complex data - view recommendations or raw data]";
+      }
       return String(value);
   }
 }
@@ -600,15 +611,25 @@ export function getExplanation(key, recordType) {
       TXT: "Text records containing metadata for the domain",
     },
     reputation: {
-      reputation_score: "Overall reputation score of the domain (0-100)",
-      blacklisted: "Whether the domain is on any checked blacklists",
-      blacklist_count: "Number of blacklists the domain is listed on",
-      blacklist_details: "List of blacklists the domain is found on",
-      total_services: "Total number of blacklist services checked",
-      domain_services: "Status of domain-based blacklist checks",
-      ip_services: "Status of IP-based blacklist checks",
-      recommendations: "Suggestions for improving domain reputation",
-      overall_status: "Overall status of domain reputation check",
+      domain: "The domain checked for reputation",
+      reputation_score:
+        "Overall reputation score based on checks (0-100, higher is better)",
+      blacklisted:
+        "Indicates if the domain or its IPs were found on any checked blacklists",
+      blacklist_count: "Number of blacklists the domain/IPs are listed on",
+      blacklist_details:
+        "List of specific blacklists where the domain/IPs were found",
+      total_services: "Total number of blacklist services queried",
+      domain_services:
+        "Results from checking the domain name against domain-based blacklists (RHSBLs)",
+      ip_services:
+        "Results from checking the domain's IP addresses against IP-based blacklists (DNSBLs)",
+      recommendations:
+        "Suggestions for improving or maintaining domain reputation",
+      ip_lookup_error:
+        "Indicates if there was an error resolving the domain to IP addresses",
+      timeout: "Indicates if the blacklist checks took too long to complete",
+      service_names: "Mapping of internal service names to user-friendly names",
     },
   };
 

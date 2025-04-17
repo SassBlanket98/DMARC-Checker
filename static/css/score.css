@@ -38,6 +38,12 @@
   font-size: 1.8rem;
   font-weight: bold;
   color: var(--text-color);
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Ensure contrast in dark mode */
+.dark-mode .score-value {
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
 }
 
 .score-label {
