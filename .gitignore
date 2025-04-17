@@ -2,3 +2,5 @@
 dmarc_errors.log
 Code.txt
 ```
+apiKey.txt
+.env

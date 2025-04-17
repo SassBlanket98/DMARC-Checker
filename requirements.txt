@@ -5,3 +5,4 @@ aiohttp
 asyncio
 requests
 ipaddress
+python-dotenv

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#b22222" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='images/neozeit_logo.png') }}"
+    />
+
+    <title>Pwned Checker - Neozeit</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/pwned_checker.css') }}"
+    />
+
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/pwned_checker.js') }}"
+    ></script>
+  </head>
+  <body>
+    <header>
+      <div class="header-container">
+        <div class="logo">
+          <img
+            src="{{ url_for('static', filename='images/Neozeit.png') }}"
+            alt="Neozeit Logo"
+          />
+        </div>
+        <div class="app-title">
+          <i class="fas fa-user-secret"></i>
+          <span>Have I Been Pwned? Checker</span>
+        </div>
+        <nav>
+          <ul>
+            <li class="nav-dropdown">
+              <a
+                href="#"
+                id="nav-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i class="fas fa-bars"></i> Tools
+                <i class="fas fa-caret-down"></i>
+              </a>
+              <div class="dropdown-menu" id="nav-dropdown-menu" role="menu">
+                <a href="/" role="menuitem"
+                  ><i class="fas fa-home"></i> Record Checker</a
+                >
+                <a href="/ip-checker" role="menuitem"
+                  ><i class="fas fa-network-wired"></i> IP Checker</a
+                >
+                <a href="/email-tester" role="menuitem"
+                  ><i class="fas fa-envelope"></i> Email Deliverability</a
+                >
+                <a href="/auth-wizard" role="menuitem"
+                  ><i class="fas fa-tools"></i> Email Auth Wizard</a
+                >
+                <a href="/header-analyzer" role="menuitem"
+                  ><i class="fas fa-info-circle"></i> Header Analyzer</a
+                >
+                <a href="/pwned-checker" role="menuitem" class="active"
+                  ><i class="fas fa-user-secret"></i> Pwned Checker</a
+                >
+              </div>
+            </li>
+            <li>
+              <a href="#" id="help-link"
+                ><i class="fas fa-question-circle"></i> Help</a
+              >
+            </li>
+            <li>
+              <a href="#" id="history-link"
+                ><i class="fas fa-history"></i> History</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="controls">
+        <button class="theme-toggle" aria-label="Toggle dark mode">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="container">
+        <h2>Check if your email has been compromised</h2>
+        <p>
+          Enter an email address to check it against the Have I Been Pwned
+          database of known data breaches.
+        </p>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input
+              type="email"
+              id="pwned-email"
+              placeholder="Enter email address"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="check-pwned-btn">
+            <i class="fas fa-search"></i> Check Email
+          </button>
+        </div>
+      </div>
+
+      <div class="container">
+        <h2>Results</h2>
+        <div class="results">
+          <div id="pwned-result">
+            Enter an email address to check for breaches.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="history-drawer" class="history-drawer">
+      <div class="drawer-header">
+        <h2>Recent Lookups</h2>
+        <button class="drawer-close" id="history-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="history-list"></div>
+    </div>
+
+    <div id="help-modal" class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Pwned Checker Help</div>
+          <button class="modal-close" id="help-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-section">
+            <h3>What is this tool?</h3>
+            <p>
+              This tool checks if an email address has appeared in any known
+              data breaches tracked by the
+              <a
+                href="https://haveibeenpwned.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Have I Been Pwned</a
+              >
+              service.
+            </p>
+          </div>
+          <div class="modal-section">
+            <h3>How to Use</h3>
+            <ol>
+              <li>
+                Enter the email address you want to check in the input field.
+              </li>
+              <li>Click the "Check Email" button.</li>
+              <li>
+                The results area will show if the email was found in any
+                breaches and list details about those breaches.
+              </li>
+            </ol>
+          </div>
+          <div class="modal-section">
+            <h3>Understanding the Results</h3>
+            <ul>
+              <li>
+                <strong>Not Pwned:</strong> Good news! The email address was not
+                found in any of the breaches known to HIBP.
+              </li>
+              <li>
+                <strong>Pwned:</strong> The email address was found in one or
+                more data breaches. Details of each breach will be listed,
+                including the site breached, the date, and the types of data
+                compromised (e.g., email addresses, passwords, usernames).
+              </li>
+            </ul>
+          </div>
+          <div class="modal-section">
+            <h3>What to do if Pwned?</h3>
+            <p>If your email address appears in a breach:</p>
+            <ul>
+              <li>
+                <strong>Change your password immediately</strong> for the
+                affected site and any other sites where you used the same or a
+                similar password.
+              </li>
+              <li>
+                Enable <strong>Two-Factor Authentication (2FA)</strong> wherever
+                possible.
+              </li>
+              <li>
+                Be vigilant for phishing emails or suspicious activity related
+                to the compromised account.
+              </li>
+              <li>
+                Consider using a unique, strong password for every online
+                account, managed with a password manager.
+              </li>
+            </ul>
+          </div>
+          <div class="modal-section">
+            <h3>Privacy</h3>
+            <p>
+              Your email address is sent directly to the Have I Been Pwned API
+              for checking. This tool does not store the emails you check or the
+              results received, beyond the standard temporary server logs
+              required for operation and security. Refer to the
+              <a
+                href="https://haveibeenpwned.com/Privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                >HIBP Privacy Policy</a
+              >
+              for details on how they handle data.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2025 Neozeit Tools | By David Hill</p>
+    </footer>
+
+    <script type="module">
+      import {
+        initNavigation,
+        setupNavResizeHandler,
+      } from "{{ url_for('static', filename='js/modules/navigation.js') }}";
+      import {
+        initHistoryHandler,
+        loadHistoryFromStorage,
+      } from "{{ url_for('static', filename='js/modules/history.js') }}";
+      import { initModals } from "{{ url_for('static', filename='js/modules/modals.js') }}";
+      import {
+        isMobileDevice,
+        initMobileEnhancements,
+        enhanceModalsForMobile,
+        enhanceMobileToast,
+        setupOrientationChangeHandler,
+        enhanceNavigationForMobile,
+      } from "{{ url_for('static', filename='js/mobile-enhancements.js') }}";
+
+      document.addEventListener("DOMContentLoaded", function () {
+        initNavigation();
+        setupNavResizeHandler();
+        initHistoryHandler();
+        loadHistoryFromStorage(); // Assuming you want history for pwned checks too
+        initModals();
+
+        // Apply theme preference
+        const theme = localStorage.getItem("theme");
+        if (theme === "dark") {
+          document.body.classList.add("dark-mode");
+          const icon = document.querySelector(".theme-toggle i");
+          if (icon) {
+            icon.classList.remove("fa-moon");
+            icon.classList.add("fa-sun");
+          }
+        }
+        // Theme toggle functionality
+        const themeToggle = document.querySelector(".theme-toggle");
+        if (themeToggle) {
+          themeToggle.addEventListener("click", function () {
+            document.body.classList.toggle("dark-mode");
+            const icon = this.querySelector("i");
+            if (document.body.classList.contains("dark-mode")) {
+              icon.classList.remove("fa-moon");
+              icon.classList.add("fa-sun");
+              localStorage.setItem("theme", "dark");
+            } else {
+              icon.classList.remove("fa-sun");
+              icon.classList.add("fa-moon");
+              localStorage.setItem("theme", "light");
+            }
+          });
+        }
+
+        // Mobile enhancements if needed
+        if (isMobileDevice()) {
+          initMobileEnhancements();
+          enhanceModalsForMobile();
+          enhanceMobileToast();
+          setupOrientationChangeHandler();
+          enhanceNavigationForMobile();
+        }
+      });
+    </script>
+  </body>
+</html>

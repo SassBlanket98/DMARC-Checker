@@ -1,0 +1,244 @@
+/* static/css/pwned_checker.css */
+
+/* Results Area Styling */
+#pwned-result {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.02);
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.dark-mode #pwned-result {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Loading State */
+.loading-container {
+  /* Re-use existing style if available */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  gap: 15px;
+  color: var(--text-color);
+}
+
+.loading-container .spinner {
+  /* Re-use existing style */
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color);
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+.dark-mode .loading-container .spinner {
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid var(--primary-color);
+}
+
+/* Safe Result */
+.pwned-safe {
+  color: var(--success-color);
+}
+.pwned-safe i {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+.pwned-safe h4 {
+  color: var(--success-color);
+  margin-bottom: 10px;
+}
+.pwned-safe .note {
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+/* Pwned Result */
+.pwned-found {
+  color: var(--error-color);
+  width: 100%; /* Ensure it takes full width */
+  text-align: left; /* Align text left for readability */
+}
+.pwned-found > i {
+  /* Target only the top-level icon */
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  display: block; /* Make icon block level */
+  text-align: center; /* Center the icon */
+}
+.pwned-found h4 {
+  color: var(--error-color);
+  margin-bottom: 10px;
+  text-align: center; /* Center the heading */
+}
+.pwned-found > p {
+  /* Target only the direct p children for centering */
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.breach-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.breach-item {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-left: 5px solid var(--error-color);
+  border-radius: 6px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  text-align: left;
+}
+
+.dark-mode .breach-item {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.breach-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+.breach-header img {
+  border-radius: 4px;
+  flex-shrink: 0; /* Prevent image from shrinking */
+}
+
+.breach-header h4 {
+  color: var(--text-color);
+  margin: 0;
+  font-size: 1.1rem;
+  flex-grow: 1; /* Allow title to take available space */
+}
+
+.breach-date {
+  font-size: 0.85rem;
+  color: var(--text-color);
+  opacity: 0.7;
+  white-space: nowrap; /* Prevent date from wrapping */
+}
+
+.breach-description {
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-color); /* Ensure description text color is appropriate */
+}
+
+/* Make description scrollable if too long */
+.breach-description {
+  max-height: 100px; /* Limit height */
+  overflow-y: auto; /* Add scroll if needed */
+  padding-right: 5px; /* Space for scrollbar */
+}
+
+.breach-data {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color);
+  font-size: 0.9rem;
+}
+.breach-data strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--primary-color);
+}
+
+.breach-data span {
+  display: inline-block;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-right: 5px;
+  margin-bottom: 5px; /* Add spacing for wrapped items */
+  font-family: "Consolas", "Monaco", monospace;
+}
+.dark-mode .breach-data span {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.verified-breach,
+.sensitive-breach,
+.spam-list {
+  display: inline-block;
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-top: 5px;
+  margin-right: 5px;
+  font-weight: 500;
+}
+.verified-breach {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: var(--success-color);
+}
+.sensitive-breach {
+  background-color: rgba(243, 156, 18, 0.2);
+  color: var(--warning-color);
+}
+.spam-list {
+  background-color: rgba(52, 152, 219, 0.2);
+  color: var(--info-color);
+}
+
+.pwned-found .warning-note {
+  margin-top: 20px;
+  font-weight: 500;
+  text-align: center; /* Center the final note */
+  color: var(--error-color);
+}
+
+/* Error Result */
+.pwned-error {
+  color: var(--error-color);
+  width: 100%;
+  text-align: center;
+}
+.pwned-error i {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+.pwned-error h4 {
+  color: var(--error-color);
+  margin-bottom: 10px;
+}
+.pwned-error small {
+  opacity: 0.8;
+  display: block;
+  margin-top: 5px;
+}
+.pwned-error p strong {
+  display: block;
+  margin-top: 15px;
+  color: var(--primary-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .breach-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .breach-date {
+    margin-top: 5px;
+  }
+}

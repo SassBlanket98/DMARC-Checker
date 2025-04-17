@@ -15,6 +15,7 @@
 @import "ip_checker.css";
 @import "email_tester.css";
 @import "email_auth_wizard.css";
+@import "pwned_checker.css";
 
 /* Utilities and responsive styles (apply last) */
 @import "responsive.css";
