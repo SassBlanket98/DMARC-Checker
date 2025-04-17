@@ -403,134 +403,148 @@ The backend provides several RESTful API endpoints:
 
 API errors generally follow this format:
 
-````json
+```json
 {
   "error": "Descriptive error message",
   "error_code": "ERROR_CODE_IDENTIFIER",
   "suggestions": ["Suggestion 1", "Suggestion 2"]
 }
+```
 
-*Common HTTP Status Codes Used*: 200 (OK), 400 (Bad Request), 401 (Unauthorized - HIBP), 403 (Forbidden - HIBP), 404 (Not Found), 429 (Rate Limited - HIBP), 500 (Internal Server Error), 503 (Service Unavailable), 504 (Gateway Timeout).
+_Common HTTP Status Codes Used_: 200 (OK), 400 (Bad Request), 401 (Unauthorized - HIBP), 403 (Forbidden - HIBP), 404 (Not Found), 429 (Rate Limited - HIBP), 500 (Internal Server Error), 503 (Service Unavailable), 504 (Gateway Timeout).
+
+---
 
 ## ⚙️ Setup and Installation (Local)
 
-1.  **Prerequisites**:
-    * Python 3.9 or higher installed.
-    * `pip` (Python package installer).
-2.  **Clone the Repository**:
-    ```bash
-    git clone <repository_url>
-    cd DMARC-Checker
-    ```
-3.  **Create a Virtual Environment** (Recommended):
-    ```bash
-    python -m venv venv
-    # Activate the environment
-    # Windows:
-    .\venv\Scripts\activate
-    # macOS/Linux:
-    source venv/bin/activate
-    ```
-4.  **Install Dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-5.  **Configure Environment Variables**:
-    * Create a file named `.env` in the project root (`DMARC-Checker`).
-    * Add the required environment variables, especially the HIBP API Key:
-        ```dotenv
-        HIBP_API_KEY=your_haveibeenpwned_api_key_here
-        # Add any other environment-specific variables if needed
-        ```
-    * **Important**: Get your HIBP API key from [Have I Been Pwned](https://haveibeenpwned.com/API/Key). The Pwned Checker tool will *not* work without it.
-6.  **Run the Application**:
-    ```bash
-    flask run
-    ```
-    Or using gunicorn (similar to production):
-    ```bash
-    gunicorn app:app -c gunicorn_config.py
-    ```
-7.  **Access the Application**: Open your web browser and navigate to `http://127.0.0.1:5000` (or the port specified by Flask/Gunicorn).
+1. **Prerequisites**:
+   - Python 3.9 or higher installed.
+   - `pip` (Python package installer).
+2. **Clone the Repository**:
+   ```bash
+   git clone <repository_url>
+   cd DMARC-Checker
+   ```
+3. **Create a Virtual Environment** (Recommended):
+   ```bash
+   python -m venv venv
+   # Activate the environment
+   # Windows:
+   .\venv\Scripts\activate
+   # macOS/Linux:
+   source venv/bin/activate
+   ```
+4. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+5. **Configure Environment Variables**:
+   - Create a file named `.env` in the project root (`DMARC-Checker`).
+   - Add the required environment variables, especially the HIBP API Key:
+     ```dotenv
+     HIBP_API_KEY=your_haveibeenpwned_api_key_here
+     # Add any other environment-specific variables if needed
+     ```
+   - **Important**: Get your HIBP API key from [Have I Been Pwned](https://haveibeenpwned.com/API/Key). The Pwned Checker tool will _not_ work without it.
+6. **Run the Application**:
+   ```bash
+   flask run
+   ```
+   Or using gunicorn (similar to production):
+   ```bash
+   gunicorn app:app -c gunicorn_config.py
+   ```
+7. **Access the Application**: Open your web browser and navigate to `http://127.0.0.1:5000` (or the port specified by Flask/Gunicorn).
+
+---
 
 ## 🔧 Configuration
 
-* **Gunicorn (`gunicorn_config.py`)**: Configures the Gunicorn WSGI server for production. Sets the bind address/port (`0.0.0.0:10000`), number of workers (4), and request timeout (180s).
-* **Environment Variables (`.env` file locally)**:
-    * `HIBP_API_KEY` (Required for Pwned Checker): Your API key from Have I Been Pwned.
-    * `FLASK_ENV` (Optional): Set to `development` for Flask development mode (enables debugger, auto-reload). Defaults to `production`.
-    * `PORT` (Optional): Port number for the server to listen on (primarily for deployment platforms like Render). Gunicorn config uses `10000`.
-* **Blacklists (`reputation_check.py`)**: The `BLACKLISTS` list defines the DNSBL and domain-based blacklists used for reputation checks. This list can be updated.
+- **Gunicorn (`gunicorn_config.py`)**: Configures the Gunicorn WSGI server for production. Sets the bind address/port (`0.0.0.0:10000`), number of workers (4), and request timeout (180s).
+- **Environment Variables (`.env` file locally)**:
+  - `HIBP_API_KEY` (Required for Pwned Checker): Your API key from Have I Been Pwned.
+  - `FLASK_ENV` (Optional): Set to `development` for Flask development mode (enables debugger, auto-reload). Defaults to `production`.
+  - `PORT` (Optional): Port number for the server to listen on (primarily for deployment platforms like Render). Gunicorn config uses `10000`.
+- **Blacklists (`reputation_check.py`)**: The `BLACKLISTS` list defines the DNSBL and domain-based blacklists used for reputation checks. This list can be updated.
+
+---
 
 ## 🚀 Deployment (Render)
 
 This application is pre-configured for easy deployment on [Render](https://render.com) using the `render.yaml` file.
 
-1.  **Fork Repository**: Fork this repository to your own GitHub account.
-2.  **Create Render Web Service**:
-    * Log in to Render.
-    * Click "New" -> "Web Service".
-    * Connect your GitHub account and select the forked repository.
-    * Render will automatically detect `render.yaml`.
-3.  **Configure Environment Variables**:
-    * In the Render dashboard for your service, go to the "Environment" section.
-    * Add an environment variable with the key `HIBP_API_KEY` and paste your HIBP API key as the value.
-    * Render automatically sets the `PORT` environment variable.
-    * Ensure `PYTHON_VERSION` is set correctly (e.g., `3.9.0` as specified in `render.yaml`).
-4.  **Deploy**: Click "Create Web Service". Render will build and deploy the application based on `render.yaml` instructions (install requirements, start Gunicorn).
+1. **Fork Repository**: Fork this repository to your own GitHub account.
+2. **Create Render Web Service**:
+   - Log in to Render.
+   - Click "New" -> "Web Service".
+   - Connect your GitHub account and select the forked repository.
+   - Render will automatically detect `render.yaml`.
+3. **Configure Environment Variables**:
+   - In the Render dashboard for your service, go to the "Environment" section.
+   - Add an environment variable with the key `HIBP_API_KEY` and paste your HIBP API key as the value.
+   - Render automatically sets the `PORT` environment variable.
+   - Ensure `PYTHON_VERSION` is set correctly (e.g., `3.9.0` as specified in `render.yaml`).
+4. **Deploy**: Click "Create Web Service". Render will build and deploy the application based on `render.yaml` instructions (install requirements, start Gunicorn).
 
 The `render.yaml` configuration specifies:
 
-* Service type: `web`
-* Environment: `python`
-* Build command: `pip install -r requirements.txt`
-* Start command: `gunicorn app:app -c gunicorn_config.py`
-* Environment variables (like `PYTHON_VERSION`).
+- Service type: `web`
+- Environment: `python`
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn app:app -c gunicorn_config.py`
+- Environment variables (like `PYTHON_VERSION`).
+
+---
 
 ## ▶️ Usage
 
 Access the deployed application via its URL or run it locally (`http://127.0.0.1:5000`).
 
-* **Navigation**: Use the "Tools" dropdown in the header to switch between different utilities (Record Checker, IP Checker, etc.). Help and History are also accessible from the header.
-* **Record Checker**: Enter a domain, select a record type ("Overview" for all), optionally add DKIM selectors, and click "Check Records". Results appear below.
-* **IP Checker**: Enter an IP or click "Check My IP". Results show geolocation, network info, etc.
-* **Email Tester**: Use the "Quick Test" panel. Enter your email and the domain you send from. Click "Run Test" for a simulated analysis.
-* **Auth Wizard**: Follow the steps, selecting your provider and entering your domain. It provides instructions and recommended DNS records. Use the verification buttons after making DNS changes.
-* **Header Analyzer**: Paste raw email headers into the text area and click "Analyze Headers". Results show authentication, path, timeline, etc.
-* **Pwned Checker**: Enter an email address and click "Check Email" to see if it's in known breaches (requires server-side HIBP key).
-* **Dark Mode**: Click the moon/sun icon in the top-right controls.
-* **History**: Click the history icon in the header to view and reuse recent lookups.
+- **Navigation**: Use the "Tools" dropdown in the header to switch between different utilities (Record Checker, IP Checker, etc.). Help and History are also accessible from the header.
+- **Record Checker**: Enter a domain, select a record type ("Overview" for all), optionally add DKIM selectors, and click "Check Records". Results appear below.
+- **IP Checker**: Enter an IP or click "Check My IP". Results show geolocation, network info, etc.
+- **Email Tester**: Use the "Quick Test" panel. Enter your email and the domain you send from. Click "Run Test" for a simulated analysis.
+- **Auth Wizard**: Follow the steps, selecting your provider and entering your domain. It provides instructions and recommended DNS records. Use the verification buttons after making DNS changes.
+- **Header Analyzer**: Paste raw email headers into the text area and click "Analyze Headers". Results show authentication, path, timeline, etc.
+- **Pwned Checker**: Enter an email address and click "Check Email" to see if it's in known breaches (requires server-side HIBP key).
+- **Dark Mode**: Click the moon/sun icon in the top-right controls.
+- **History**: Click the history icon in the header to view and reuse recent lookups.
+
+---
 
 ## ⚠️ Error Handling & Logging
 
-* **Custom Exceptions (`error_handling.py`)**: The backend uses custom exception classes (`DmarcError`, `DomainError`, `DnsLookupError`, etc.) for specific error types.
-* **API Error Handler (`@api_error_handler`)**: A Flask decorator wraps API routes to catch exceptions and return standardized JSON error responses with messages, error codes, and suggestions.
-* **DNS Error Mapping**: Specific `dnspython` exceptions (e.g., `NXDOMAIN`, `NoAnswer`, `Timeout`) are mapped to user-friendly error details.
-* **Frontend Error Display**: Errors from the API are typically displayed within the results area of the relevant tool, often using specific CSS classes (`issue-error`, `issue-warning`). Toast notifications (`static/js/modules/toast.js`) are also used for warnings or brief errors.
-* **Logging (`error_handling.py`, `app.py`)**:
-    * Configured using Python's `logging` module.
-    * Logs informational messages and errors during backend operations.
-    * Errors (level `ERROR` and above) are logged to `dmarc_errors.log` in the project root. This file shows various `Domain does not exist` and `Timeout` errors from previous runs.
-    * Log level is set to `DEBUG` in `error_handling.py`, providing detailed logs during development. Werkzeug (Flask's development server) logs are set to `INFO`.
+- **Custom Exceptions (`error_handling.py`)**: The backend uses custom exception classes (`DmarcError`, `DomainError`, `DnsLookupError`, etc.) for specific error types.
+- **API Error Handler (`@api_error_handler`)**: A Flask decorator wraps API routes to catch exceptions and return standardized JSON error responses with messages, error codes, and suggestions.
+- **DNS Error Mapping**: Specific `dnspython` exceptions (e.g., `NXDOMAIN`, `NoAnswer`, `Timeout`) are mapped to user-friendly error details.
+- **Frontend Error Display**: Errors from the API are typically displayed within the results area of the relevant tool, often using specific CSS classes (`issue-error`, `issue-warning`). Toast notifications (`static/js/modules/toast.js`) are also used for warnings or brief errors.
+- **Logging (`error_handling.py`, `app.py`)**:
+  - Configured using Python's `logging` module.
+  - Logs informational messages and errors during backend operations.
+  - Errors (level `ERROR` and above) are logged to `dmarc_errors.log` in the project root. This file shows various `Domain does not exist` and `Timeout` errors from previous runs.
+  - Log level is set to `DEBUG` in `error_handling.py`, providing detailed logs during development. Werkzeug (Flask's development server) logs are set to `INFO`.
+
+---
 
 ## 🔒 Security Considerations
 
-* **HIBP API Key**: The `HIBP_API_KEY` is sensitive. **DO NOT** commit it directly into the code or `apiKey.txt`. Use environment variables as implemented in `app.py`. Ensure the `.env` file (if used locally) is added to `.gitignore`. Configure this securely in your deployment environment (like Render's environment variables).
-* **Input Validation**: Backend routes include validation for domain names (`is_valid_domain`) and IP addresses (`is_valid_ip`) to prevent basic injection or malformed requests. Further sanitization might be needed depending on usage context.
-* **External API Timeouts**: Timeouts are implemented for external API calls (HIBP, IP Geolocation) to prevent requests from hanging indefinitely.
-* **Client-Side Analysis**: The Email Header Analyzer performs all parsing on the client-side (in the user's browser) to avoid sending potentially sensitive email header data to the server.
-* **Dependencies**: Keep dependencies (`requirements.txt`) updated to patch potential vulnerabilities. Regularly audit dependencies.
+- **HIBP API Key**: The `HIBP_API_KEY` is sensitive. **DO NOT** commit it directly into the code or `apiKey.txt`. Use environment variables as implemented in `app.py`. Ensure the `.env` file (if used locally) is added to `.gitignore`. Configure this securely in your deployment environment (like Render's environment variables).
+- **Input Validation**: Backend routes include validation for domain names (`is_valid_domain`) and IP addresses (`is_valid_ip`) to prevent basic injection or malformed requests. Further sanitization might be needed depending on usage context.
+- **External API Timeouts**: Timeouts are implemented for external API calls (HIBP, IP Geolocation) to prevent requests from hanging indefinitely.
+- **Client-Side Analysis**: The Email Header Analyzer performs all parsing on the client-side (in the user's browser) to avoid sending potentially sensitive email header data to the server.
+- **Dependencies**: Keep dependencies (`requirements.txt`) updated to patch potential vulnerabilities. Regularly audit dependencies.
+
+---
 
 ## 🙏 Acknowledgements
 
-* [DNSPython](https://www.dnspython.org/): For robust DNS querying capabilities.
-* [Flask](https://flask.palletsprojects.com/): For the backend web framework.
-* [aiohttp](https://docs.aiohttp.org/): For asynchronous HTTP requests.
-* [Have I Been Pwned (HIBP)](https://haveibeenpwned.com/): For the data breach checking service.
-* [ipapi.co](https://ipapi.co/) & [ipinfo.io](https://ipinfo.io/): For IP geolocation services.
-* [Font Awesome](https://fontawesome.com/): For icons used in the frontend.
-* [Render](https://render.com): For hosting and deployment platform.
-* [Gunicorn](https://gunicorn.org/): For production WSGI server.
-* [DMARC.org](https://dmarc.org/), [SPF Project](http://www.open-spf.org/), [DKIM.org](http://dkim.org/): For standards and information on email authentication.
-* Various DNSBL/RHSBL providers used in `reputation_check.py`.
-````
+- [DNSPython](https://www.dnspython.org/): For robust DNS querying capabilities.
+- [Flask](https://flask.palletsprojects.com/): For the backend web framework.
+- [aiohttp](https://docs.aiohttp.org/): For asynchronous HTTP requests.
+- [Have I Been Pwned (HIBP)](https://haveibeenpwned.com/): For the data breach checking service.
+- [ipapi.co](https://ipapi.co/) & [ipinfo.io](https://ipinfo.io/): For IP geolocation services.
+- [Font Awesome](https://fontawesome.com/): For icons used in the frontend.
+- [Render](https://render.com): For hosting and deployment platform.
+- [Gunicorn](https://gunicorn.org/): For production WSGI server.
+- [DMARC.org](https://dmarc.org/), [SPF Project](http://www.open-spf.org/), [DKIM.org](http://dkim.org/): For standards and information on email authentication.
+- Various DNSBL/RHSBL providers used in `reputation_check.py`.
