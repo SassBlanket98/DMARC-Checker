@@ -1,19 +1,16 @@
 # app.py - Updated Version
 
-import asyncio
-import sys
-import logging
-import ip_checker
-import email_tester
-import auth_verification
-import datetime
-import os  # <-- Make sure os is imported
-import aiohttp # <-- Make sure aiohttp is imported
-import re # <-- Import re for email validation
+from datetime import datetime
+import os
+import sys # Ensure sys is imported
+import asyncio # Ensure asyncio is imported
+import logging # Ensure logging is imported
+import re # Ensure re is imported
+import aiohttp # Ensure aiohttp is imported
 
 # --- Load environment variables ---
 # If using python-dotenv locally, uncomment the next two lines
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 load_dotenv()
 # ----------------------------------
 
@@ -23,7 +20,8 @@ if sys.platform == 'win32':
 
 from flask import Flask, request, jsonify, render_template # <-- Ensure Flask components are imported
 import dmarc_lookup
-import reputation_check
+import reputation  # Use the consolidated reputation module
+import email_tester
 from concurrent.futures import ThreadPoolExecutor
 from error_handling import (
     api_error_handler,
@@ -219,7 +217,7 @@ def overview():
     spf_data = run_async(dmarc_lookup.get_spf_record, domain)
     dkim_data = run_async(dmarc_lookup.get_all_dkim_records, domain) # Use default selectors
     dns_data = run_async(dmarc_lookup.get_all_dns_records, domain)
-    reputation_data = run_async(reputation_check.check_domain_reputation, domain)
+    reputation_data = run_async(reputation.check_domain_reputation, domain)
 
     # Aggregate all records into a response
     overview_data = {
@@ -302,8 +300,7 @@ def get_record(record_type):
             data = run_async(dmarc_lookup.get_all_dkim_records, domain, selectors)
             # Check if all selectors failed if selectors were provided
             if selectors:
-                all_failed = True
-                # Check if data is a dict before iterating
+                all_failed = True                # Check if data is a dict before iterating
                 if isinstance(data, dict):
                     for selector in selectors:
                          selector_data = data.get(selector, {})
@@ -326,11 +323,10 @@ def get_record(record_type):
                             "Common selectors include: google, default, selector1, selector2"
                             ]}
 
-
         elif record_type == "dns":
             data = run_async(dmarc_lookup.get_all_dns_records, domain)
         elif record_type == "reputation":
-            data = run_async(reputation_check.check_domain_reputation, domain)
+            data = run_async(reputation.check_domain_reputation, domain)
             # Ensure the data is properly structured for parsing if no error
             if "error" not in data:
                  data["parsed_record"] = data.copy()
@@ -389,10 +385,8 @@ def check_reputation():
                 "Domain should be in a valid format (e.g., example.com).",
                 "Domain should not include protocols or paths (no http://, www., etc.)."
             ]
-        )
-
-    # Fetch reputation data
-    reputation_data = run_async(reputation_check.check_domain_reputation, domain)
+        )    # Fetch reputation data
+    reputation_data = run_async(reputation.check_domain_reputation, domain)
 
     # Add parsed_record to ensure consistency with overview endpoint if no error
     if "error" not in reputation_data:
@@ -441,7 +435,7 @@ def get_ip_info():
         )
 
     # Get IP information (pass None if we couldn't determine IP)
-    ip_info = run_async(ip_checker.get_complete_ip_info, ip_address if ip_address else None)
+    ip_info = run_async(reputation.get_complete_ip_info, ip_address if ip_address else None)
 
     return jsonify(ip_info)
 

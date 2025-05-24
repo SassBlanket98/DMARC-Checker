@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Enhanced IP Display</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="static/css/main.css">
+    <link rel="stylesheet" href="static/css/ip_checker.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Test Enhanced IP Display</h1>
+        <div id="test-result"></div>
+        <button onclick="testEnhancedDisplay()">Test Enhanced IP Display</button>
+    </div>
+
+    <script type="module">
+        import { renderIpData } from './static/js/modules/ip_display.js';
+
+        // Test data with enhanced external reputation sources
+        const testData = {
+            ip: "8.8.8.8",
+            version: "IPv4",
+            city: "Mountain View",
+            region: "California",
+            country: "United States",
+            location: {
+                latitude: 37.4056,
+                longitude: -122.0775
+            },
+            isp: "Google LLC",
+            timezone: "America/Los_Angeles",
+            asn: "AS15169",
+            reputation: {
+                reputation_score: 85,
+                is_listed: false,
+                reports: 2,
+                last_reported: "2024-01-15"
+            },
+            external_reputation_sources: [
+                {
+                    source: "AbuseIPDB",
+                    data: {
+                        data: {
+                            abuseConfidencePercentage: 5,
+                            usageType: "hosting",
+                            isp: "Google LLC",
+                            totalReports: 2
+                        }
+                    }
+                },
+                {
+                    source: "VirusTotal",
+                    data: {
+                        reputation: 10,
+                        last_analysis_stats: {
+                            malicious: 0,
+                            suspicious: 0,
+                            harmless: 89,
+                            undetected: 2
+                        }
+                    }
+                },
+                {
+                    source: "DNSBL",
+                    data: {
+                        checked_servers: ["zen.spamhaus.org", "bl.spamcop.net"],
+                        info: "Not listed on any checked DNSBLs"
+                    }
+                }
+            ],
+            overall_calculated_reputation: {
+                score: 88
+            },
+            recommendations: [
+                {
+                    title: "IP Reputation is Good",
+                    description: "This IP address has a good reputation across multiple threat intelligence sources.",
+                    priority: "low"
+                }
+            ]
+        };
+
+        window.testEnhancedDisplay = function () {
+            const resultDiv = document.getElementById('test-result');
+            resultDiv.innerHTML = renderIpData(testData);
+        };
+    </script>
+</body>
+
+</html>

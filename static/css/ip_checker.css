@@ -108,19 +108,23 @@
   color: #aaa;
 }
 
+/* IP Reputation Section */
 .ip-reputation {
+  background: var(--card-background);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
   margin-top: 20px;
   padding: 20px;
-  border-radius: 8px;
-  background-color: var(--card-background);
-  border-left: 4px solid var(--warning-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .reputation-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .reputation-score-container {
@@ -128,59 +132,300 @@
   height: 60px;
   border-radius: 50%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-weight: bold;
+  justify-content: center;
   font-size: 1.2rem;
+  font-weight: bold;
   color: white;
+  flex-shrink: 0;
 }
 
-.score-good {
-  background-color: var(--success-color);
+.reputation-score-container.score-good {
+  background: linear-gradient(135deg, #28a745, #20c997);
 }
 
-.score-medium {
-  background-color: var(--warning-color);
+.reputation-score-container.score-medium {
+  background: linear-gradient(135deg, #ffc107, #fd7e14);
 }
 
-.score-poor {
-  background-color: var(--error-color);
+.reputation-score-container.score-warning {
+  background: linear-gradient(135deg, #fd7e14, #dc3545);
+}
+
+.reputation-score-container.score-poor {
+  background: linear-gradient(135deg, #dc3545, #6f42c1);
+}
+
+.reputation-header h3 {
+  margin: 0 0 5px 0;
+  color: var(--text-color);
+  font-size: 1.1rem;
+}
+
+.reputation-header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 .reputation-details {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
-  margin-top: 15px;
+  margin-bottom: 20px;
 }
 
 .reputation-item {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 10px;
+  background: var(--background-color);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
 }
 
 .reputation-item i {
-  font-size: 1rem;
+  width: 20px;
+  text-align: center;
 }
 
 .reputation-item i.good {
-  color: var(--success-color);
+  color: #28a745;
 }
 
 .reputation-item i.medium {
-  color: var(--warning-color);
+  color: #ffc107;
 }
 
 .reputation-item i.poor {
-  color: var(--error-color);
+  color: #dc3545;
 }
 
+.reputation-item span {
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+/* IP Recommendations */
 .ip-recommendations {
+  background: var(--card-background);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
   margin-top: 20px;
+  padding: 20px;
 }
 
-/* Responsive styles */
+.ip-recommendations h3 {
+  margin: 0 0 15px 0;
+  color: var(--text-color);
+  font-size: 1.1rem;
+}
+
+.recommendation {
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border-left: 4px solid;
+}
+
+.recommendation.high-priority {
+  background: rgba(220, 53, 69, 0.1);
+  border-left-color: #dc3545;
+}
+
+.recommendation.medium-priority {
+  background: rgba(255, 193, 7, 0.1);
+  border-left-color: #ffc107;
+}
+
+.recommendation.low-priority {
+  background: rgba(40, 167, 69, 0.1);
+  border-left-color: #28a745;
+}
+
+.recommendation h4 {
+  margin: 0 0 8px 0;
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+.recommendation p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* External Reputation Sources */
+.external-sources {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--card-background);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.external-sources h4 {
+  margin: 0 0 15px 0;
+  color: var(--text-color);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.external-source {
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.external-source:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(178, 34, 34, 0.1);
+}
+
+.source-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.source-name {
+  font-weight: 600;
+  color: var(--text-color);
+  flex: 1;
+}
+
+.source-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.source-status.good {
+  background: rgba(0, 128, 0, 0.1);
+  color: #008000;
+  border: 1px solid rgba(0, 128, 0, 0.3);
+}
+
+.source-status.warning {
+  background: rgba(255, 165, 0, 0.1);
+  color: #ff8c00;
+  border: 1px solid rgba(255, 165, 0, 0.3);
+}
+
+.source-status.poor,
+.source-status.error {
+  background: rgba(220, 20, 60, 0.1);
+  color: #dc143c;
+  border: 1px solid rgba(220, 20, 60, 0.3);
+}
+
+.source-status.medium,
+.source-status.info {
+  background: rgba(70, 130, 180, 0.1);
+  color: #4682b4;
+  border: 1px solid rgba(70, 130, 180, 0.3);
+}
+
+.source-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.source-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.metric-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.metric-value {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.metric-value.good {
+  color: #008000;
+}
+
+.metric-value.warning {
+  color: #ff8c00;
+}
+
+.metric-value.poor {
+  color: #dc143c;
+}
+
+.metric-value.medium {
+  color: #4682b4;
+}
+
+.error-message {
+  color: var(--error-color);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Dark mode adjustments */
+.dark-mode .ip-map-container {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #aaa;
+}
+
+.dark-mode .ip-reputation,
+.dark-mode .ip-recommendations {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .reputation-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .reputation-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Responsive design for external sources */
+@media (max-width: 768px) {
+  .sources-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .source-metric {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .metric-label {
+    font-size: 0.85rem;
+  }
+}
+
 @media (max-width: 768px) {
   .ip-data-grid {
     grid-template-columns: 1fr;
@@ -203,5 +448,21 @@
 
   .ip-map-container {
     height: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .reputation-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+
+  .reputation-details {
+    grid-template-columns: 1fr;
+  }
+
+  .reputation-item {
+    justify-content: center;
   }
 }
