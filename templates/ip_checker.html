@@ -120,13 +120,13 @@
       </div>
 
       <div class="container">
-        <h2>IP Address Information Tool</h2>
+        <h2>Enhanced IP Intelligence & Threat Analysis Tool</h2>
         <div class="input-group">
           <div class="input-wrapper">
             <input
               type="text"
               id="ip-address"
-              placeholder="Enter an IP address (leave empty to check your current IP)"
+              placeholder="Enter an IP address (enhanced threat intelligence analysis available)"
               autocomplete="off"
             />
           </div>
@@ -146,7 +146,9 @@
         <h2>IP Information</h2>
         <div class="results">
           <div id="ip-result">
-            Enter an IP address or check your current IP to see results here.
+            Enter an IP address or check your current IP for comprehensive
+            threat intelligence analysis including geolocation, network details,
+            and security reputation from 20+ sources.
           </div>
         </div>
       </div>
@@ -169,60 +171,95 @@
     <div id="help-modal" class="modal-backdrop">
       <div class="modal">
         <div class="modal-header">
-          <div class="modal-title">IP Checker Help & Information</div>
+          <div class="modal-title">
+            Enhanced IP Checker - Threat Intelligence Edition
+          </div>
           <button class="modal-close" id="help-close">
             <i class="fas fa-times"></i>
           </button>
         </div>
         <div class="modal-body">
           <div class="modal-section">
-            <h3>About IP Checker</h3>
+            <h3>About Enhanced IP Checker</h3>
             <p>
-              IP Checker allows you to retrieve detailed information about any
-              IP address, including:
+              Our enhanced IP Checker provides comprehensive threat intelligence
+              and detailed information about any IP address through multiple
+              data sources:
             </p>
             <ul>
               <li>
-                <strong>Geolocation</strong> - City, region, and country
-                associated with the IP
+                <strong>Geolocation Intelligence</strong> - Precise city,
+                region, country, and coordinates with ISP details
               </li>
               <li>
-                <strong>Network Information</strong> - ISP, ASN, and connection
-                details
+                <strong>Network Information</strong> - ISP, ASN, autonomous
+                system details, and connection type
               </li>
               <li>
-                <strong>IP Reputation</strong> - Security and trustworthiness
-                indicators
+                <strong>Advanced Reputation Analysis</strong> - Multi-source
+                threat intelligence from 20+ security databases
               </li>
               <li>
-                <strong>Technical Details</strong> - IP version and other
-                characteristics
+                <strong>External Security Sources</strong> - Real-time data from
+                AbuseIPDB, VirusTotal, and leading threat feeds
+              </li>
+              <li>
+                <strong>DNSBL Monitoring</strong> - Comprehensive blacklist
+                checking across 18+ DNS-based blacklists
+              </li>
+              <li>
+                <strong>Weighted Risk Scoring</strong> - Intelligent 0-100
+                reputation score with threat level classification
+              </li>
+              <li>
+                <strong>Technical Analysis</strong> - IP version, geographic
+                routing, and infrastructure assessment
               </li>
             </ul>
           </div>
-
           <div class="modal-section">
-            <h3>How to Use This Tool</h3>
+            <h3>How to Use This Enhanced Tool</h3>
             <ol>
               <li>
                 Enter an IP address in the input field, or leave it empty to
-                check your current IP.
+                check your current IP with full threat intelligence.
               </li>
               <li>
-                Click "Check IP" to retrieve information about the specified IP
-                address.
+                Click "Check IP" to retrieve comprehensive information including
+                geolocation, network details, and multi-source reputation
+                analysis.
               </li>
               <li>
-                Alternatively, click "Check My IP" to instantly check your
-                current public IP address.
+                Alternatively, click "Check My IP" to instantly analyze your
+                current public IP address with complete security assessment.
               </li>
               <li>
-                View the detailed information, including geolocation, network
-                details, and reputation.
+                Review the detailed results including:
+                <ul>
+                  <li>
+                    <strong>Overall Reputation Score</strong> - 0-100 weighted
+                    security rating
+                  </li>
+                  <li>
+                    <strong>External Sources</strong> - Real-time data from
+                    AbuseIPDB, VirusTotal, and others
+                  </li>
+                  <li>
+                    <strong>DNSBL Status</strong> - Blacklist presence across
+                    18+ security databases
+                  </li>
+                  <li>
+                    <strong>Threat Classification</strong> - Risk level
+                    assessment and security recommendations
+                  </li>
+                </ul>
+              </li>
+              <li>
+                Use the recommendations provided to understand potential
+                security implications and next steps.
               </li>
             </ol>
           </div>
-
           <div class="modal-section">
             <h3>IP Types</h3>
             <p>There are two main types of IP addresses:</p>
@@ -241,7 +278,70 @@
           </div>
 
           <div class="modal-section">
-            <h3>Privacy Information</h3>
+            <h3>Enhanced Threat Intelligence Sources</h3>
+            <p>
+              Our enhanced IP checker integrates data from multiple premium
+              security sources:
+            </p>
+            <ul>
+              <li>
+                <strong>AbuseIPDB</strong> - Community-driven IP abuse database
+                with real-time threat reports
+              </li>
+              <li>
+                <strong>VirusTotal</strong> - Google's comprehensive malware and
+                threat detection platform
+              </li>
+              <li>
+                <strong>18+ DNSBL Services</strong> - Including Spamhaus ZEN,
+                Barracuda, SpamCop, and enterprise blacklists
+              </li>
+              <li>
+                <strong>Geographic Intelligence</strong> - Enhanced geolocation
+                with ISP and ASN correlation
+              </li>
+              <li>
+                <strong>Performance Optimization</strong> - Intelligent caching
+                and concurrent API processing for 10x faster results
+              </li>
+            </ul>
+          </div>
+
+          <div class="modal-section">
+            <h3>Understanding Reputation Scores</h3>
+            <p>
+              Our weighted reputation scoring system provides clear threat
+              assessment:
+            </p>
+            <ul>
+              <li>
+                <strong>80-100:</strong>
+                <span style="color: #27ae60">Excellent</span> - Clean reputation
+                across all sources
+              </li>
+              <li>
+                <strong>60-79:</strong>
+                <span style="color: #f39c12">Good</span> - Generally safe with
+                minor cautions
+              </li>
+              <li>
+                <strong>40-59:</strong>
+                <span style="color: #e67e22">Moderate</span> - Some risk
+                indicators present
+              </li>
+              <li>
+                <strong>0-39:</strong>
+                <span style="color: #e74c3c">Poor</span> - Significant security
+                concerns detected
+              </li>
+            </ul>
+            <p>
+              Scores are calculated by analyzing data from all external sources,
+              DNSBL listings, and historical threat patterns.
+            </p>
+          </div>
+          <div class="modal-section">
+            <h3>Privacy & Performance Information</h3>
             <p>
               When using the "Check My IP" feature, the tool retrieves your
               public IP address - the identifier that your internet service
@@ -250,9 +350,23 @@
               them.
             </p>
             <p>
-              We do not store IP addresses or any information associated with
-              them. All lookups are performed in real-time and the data is not
-              saved to any database.
+              <strong>Enhanced Security:</strong> We query multiple external
+              threat intelligence sources (AbuseIPDB, VirusTotal, and 18+ DNSBL
+              services) to provide comprehensive security analysis. All queries
+              are performed securely over HTTPS.
+            </p>
+            <p>
+              <strong>Privacy Protection:</strong> We do not store IP addresses
+              or any information associated with them. All lookups are performed
+              in real-time and the data is not saved to any database. External
+              API calls are made directly from our servers to protect your
+              privacy.
+            </p>
+            <p>
+              <strong>Performance:</strong> Results are cached temporarily for
+              improved performance, and concurrent API processing ensures fast
+              response times even when querying multiple threat intelligence
+              sources.
             </p>
           </div>
         </div>
