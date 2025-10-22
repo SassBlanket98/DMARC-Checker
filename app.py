@@ -23,6 +23,7 @@ if sys.platform == 'win32':
 
 from flask import Flask, request, jsonify, render_template # <-- Ensure Flask components are imported
 import dmarc_lookup
+import domain_intel
 import reputation_check
 from concurrent.futures import ThreadPoolExecutor
 from error_handling import (
@@ -332,8 +333,9 @@ def get_record(record_type):
         elif record_type == "reputation":
             data = run_async(reputation_check.check_domain_reputation, domain)
             # Ensure the data is properly structured for parsing if no error
-            if "error" not in data:
-                 data["parsed_record"] = data.copy()
+            if isinstance(data, dict) and "error" not in data:
+                # Avoid in-place mutation to keep typing/tools happy
+                data = {**data, "parsed_record": dict(data)}
 
 
         # Return the fetched data as a JSON response
@@ -395,8 +397,9 @@ def check_reputation():
     reputation_data = run_async(reputation_check.check_domain_reputation, domain)
 
     # Add parsed_record to ensure consistency with overview endpoint if no error
-    if "error" not in reputation_data:
-        reputation_data["parsed_record"] = reputation_data.copy()
+    if isinstance(reputation_data, dict) and "error" not in reputation_data:
+        # Avoid in-place mutation to keep typing/tools happy
+        reputation_data = {**reputation_data, "parsed_record": dict(reputation_data)}
 
     return jsonify(reputation_data)
 
@@ -444,6 +447,58 @@ def get_ip_info():
     ip_info = run_async(ip_checker.get_complete_ip_info, ip_address if ip_address else None)
 
     return jsonify(ip_info)
+
+
+@app.route("/api/domain-intel", methods=["GET"])
+@api_error_handler
+def get_domain_intel():
+    """
+    Aggregate domain intelligence from configured providers (e.g., stealer logs, credential leaks).
+
+    Query Parameters:
+        domain (str): The domain name to search for.
+
+    Returns:
+        JSON: Provider-by-provider results and a summary of findings.
+    """
+    domain = request.args.get("domain")
+    if not domain:
+        raise DomainError(
+            "Domain parameter is required",
+            "MISSING_DOMAIN",
+            ["Please provide a domain name to check."],
+        )
+
+    # Validate domain format
+    if not is_valid_domain(domain):
+        raise DomainError(
+            f"Invalid domain format: {domain}",
+            "INVALID_DOMAIN_FORMAT",
+            [
+                "Domain should be in a valid format (e.g., example.com)",
+                "Domain should not include protocols or paths (no http://, www., etc.)",
+            ],
+        )
+
+    # Run provider queries asynchronously
+    try:
+        intel_data = run_async(domain_intel.search_domain_intel, domain)
+        return jsonify(intel_data)
+    except Exception as e:
+        logging.exception(f"Error fetching domain intel for {domain}: {e}")
+        return (
+            jsonify(
+                {
+                    "error": f"An error occurred fetching domain intelligence: {str(e)}",
+                    "error_code": "DOMAIN_INTEL_ERROR",
+                    "suggestions": [
+                        "Please try again later",
+                        "Ensure any required provider API keys are configured on the server",
+                    ],
+                }
+            ),
+            500,
+        )
 
 
 @app.route("/api/email-test", methods=["POST"])

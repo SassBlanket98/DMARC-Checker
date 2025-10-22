@@ -127,16 +127,28 @@
       </div>
 
       <div class="container">
-        <h2>Check if your email has been compromised</h2>
+        <h2>Pwned and Domain Exposure Checker</h2>
         <p>
-          Enter an email address to check it against the Have I Been Pwned
-          database of known data breaches.
+          Choose a mode to check either a single email against Have I Been
+          Pwned, or search a domain for exposure signals (e.g., stealer logs)
+          from supported providers.
         </p>
+
+        <div class="mode-toggle" role="radiogroup" aria-label="Check mode">
+          <label class="mode-option">
+            <input type="radio" name="check-mode" value="email" checked />
+            <span><i class="fas fa-envelope"></i> Email</span>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="check-mode" value="domain" />
+            <span><i class="fas fa-globe"></i> Domain</span>
+          </label>
+        </div>
         <div class="input-group">
           <div class="input-wrapper">
             <input
-              type="email"
-              id="pwned-email"
+              type="text"
+              id="pwned-input"
               placeholder="Enter email address"
               autocomplete="off"
             />
@@ -153,9 +165,7 @@
       <div class="container">
         <h2>Results</h2>
         <div class="results">
-          <div id="pwned-result">
-            Enter an email address to check for breaches.
-          </div>
+          <div id="pwned-result">Select a mode and enter a value to check.</div>
         </div>
       </div>
     </main>

@@ -2,17 +2,59 @@
 
 import { showToast } from "./modules/toast.js";
 import { addToHistory } from "./modules/history.js"; // Assuming you want history
+import { validateDomain } from "./domainValidation.js";
 
 document.addEventListener("DOMContentLoaded", function () {
   const checkButton = document.getElementById("check-pwned-btn");
-  const emailInput = document.getElementById("pwned-email");
+  const input = document.getElementById("pwned-input");
   const resultDiv = document.getElementById("pwned-result");
+  const modeRadios = document.querySelectorAll('input[name="check-mode"]');
 
-  if (checkButton && emailInput && resultDiv) {
-    checkButton.addEventListener("click", checkEmailPwned);
-    emailInput.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
+  if (checkButton && input && resultDiv) {
+    // Mode change updates placeholder/button
+    const syncUiToMode = () => {
+      const mode = getMode();
+      if (mode === "email") {
+        input.type = "email";
+        input.placeholder = "Enter email address";
+        checkButton.innerHTML = '<i class="fas fa-search"></i> Check Email';
+        resultDiv.innerHTML = "Enter an email address to check for breaches.";
+      } else {
+        input.type = "text";
+        input.placeholder = "Enter domain (e.g., example.com)";
+        checkButton.innerHTML = '<i class="fas fa-search"></i> Search Domain';
+        resultDiv.innerHTML = "Enter a domain to search for exposure signals.";
+      }
+    };
+
+    const getMode = () => {
+      const selected = document.querySelector(
+        'input[name="check-mode"]:checked'
+      );
+      return selected ? selected.value : "email";
+    };
+
+    modeRadios.forEach((r) => r.addEventListener("change", syncUiToMode));
+    syncUiToMode();
+
+    checkButton.addEventListener("click", () => {
+      const mode = getMode();
+      if (mode === "email") {
         checkEmailPwned();
+      } else {
+        checkDomainIntel();
+      }
+    });
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        const mode =
+          document.querySelector('input[name="check-mode"]:checked')?.value ||
+          "email";
+        if (mode === "email") {
+          checkEmailPwned();
+        } else {
+          checkDomainIntel();
+        }
       }
     });
   } else {
@@ -21,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 async function checkEmailPwned() {
-  const emailInput = document.getElementById("pwned-email");
+  const emailInput = document.getElementById("pwned-input");
   const resultDiv = document.getElementById("pwned-result");
   const email = emailInput.value.trim();
 
@@ -70,6 +112,54 @@ async function checkEmailPwned() {
                 Could not connect to the checking service. Please check your connection and try again.
             </div>`;
     showToast("Network error. Could not check email.", "error");
+  }
+}
+
+async function checkDomainIntel() {
+  const input = document.getElementById("pwned-input");
+  const resultDiv = document.getElementById("pwned-result");
+  const domain = input.value.trim().toLowerCase();
+
+  if (!domain) {
+    showToast("Please enter a domain.", "warning");
+    return;
+  }
+
+  const validation = validateDomain(domain);
+  if (!validation.valid) {
+    resultDiv.innerHTML = renderPwnedError(validation.error);
+    showToast("Please enter a valid domain (e.g., example.com).", "error");
+    return;
+  }
+
+  resultDiv.innerHTML = `
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <div>Searching ${escapeHtml(domain)}...</div>
+        </div>`;
+
+  try {
+    const resp = await fetch(
+      `/api/domain-intel?domain=${encodeURIComponent(domain)}`
+    );
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      resultDiv.innerHTML = renderPwnedError(data);
+      showToast(data.error || "Error searching domain.", "error");
+      return;
+    }
+
+    resultDiv.innerHTML = renderDomainIntelResult(data);
+    addToHistory(domain, "domain-intel");
+  } catch (e) {
+    console.error("Domain intel error:", e);
+    resultDiv.innerHTML = `
+            <div class="pwned-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                Could not connect to the domain intelligence service. Please try again later.
+            </div>`;
+    showToast("Network error. Could not query providers.", "error");
   }
 }
 
@@ -182,6 +272,99 @@ function renderPwnedError(errorData) {
             }
             ${suggestions}
         </div>`;
+}
+
+function renderDomainIntelResult(data) {
+  const summary = data.summary || { total_findings: 0, categories: {} };
+  const providers = data.providers || {};
+
+  const categoryChips = Object.entries(summary.categories)
+    .map(([k, v]) => `<span class="chip">${escapeHtml(k)}: ${v}</span>`)
+    .join(" ");
+
+  const providerBlocks = Object.entries(providers)
+    .map(([name, p]) => {
+      if (!p.configured || p.status === "not_configured") {
+        return `
+          <div class="breach-item">
+            <div class="breach-header">
+              <h4>${escapeHtml(name)}</h4>
+              <span class="breach-date">Not configured</span>
+            </div>
+            <div class="breach-description">
+              Configure this provider's API key on the server to enable results.
+            </div>
+          </div>`;
+      }
+
+      if (p.status !== "ok") {
+        return `
+          <div class="breach-item">
+            <div class="breach-header">
+              <h4>${escapeHtml(name)}</h4>
+              <span class="breach-date">Error</span>
+            </div>
+            <div class="breach-description">
+              ${escapeHtml(p.message || "Provider returned an error.")}
+              ${
+                p.error_code
+                  ? `<div><small>Code: ${escapeHtml(
+                      p.error_code
+                    )}</small></div>`
+                  : ""
+              }
+            </div>
+          </div>`;
+      }
+
+      const findings = (p.findings || [])
+        .map((f) => {
+          const meta = f.metadata
+            ? `<details><summary>Details</summary><pre>${escapeHtml(
+                JSON.stringify(f.metadata, null, 2)
+              )}</pre></details>`
+            : "";
+          return `
+          <div class="breach-item">
+            <div class="breach-header">
+              <h4>${escapeHtml(f.title || "Finding")}</h4>
+              <span class="breach-date">${escapeHtml(f.date || "")}</span>
+            </div>
+            <div class="breach-description">
+              <strong>Type:</strong> ${escapeHtml(
+                f.type || "unknown"
+              )} &nbsp;|&nbsp; <strong>Source:</strong> ${escapeHtml(
+            f.source || name
+          )}
+            </div>
+            ${meta}
+          </div>`;
+        })
+        .join("");
+
+      return `
+        <div class="provider-block">
+          <h4><i class="fas fa-database"></i> ${escapeHtml(name)} (${
+        p.findings_count || 0
+      })</h4>
+          ${
+            findings ||
+            `<div class="breach-item"><div class="breach-description">No findings returned.</div></div>`
+          }
+        </div>`;
+    })
+    .join("");
+
+  return `
+    <div class="pwned-found">
+      <i class="fas fa-search"></i>
+      <h4>Domain Intelligence Summary</h4>
+      <p>Total findings: <strong>${summary.total_findings || 0}</strong></p>
+      <div class="breach-list">${categoryChips || ""}</div>
+      <div class="breach-list">${providerBlocks}</div>
+      <p class="note">Provider integrations require valid API keys configured on the server. Unconfigured providers will be skipped.</p>
+    </div>
+  `;
 }
 
 // Helper to escape HTML entities

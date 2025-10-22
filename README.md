@@ -67,6 +67,7 @@ Key goals include:
 - **Interactive Email Authentication Wizard**: Step-by-step guide for configuring SPF, DKIM, and DMARC with provider-specific instructions (Google Workspace, Microsoft 365, Zoho, Amazon SES, Mailchimp, SendGrid, Custom, Other). Includes verification steps.
 - **Email Header Analysis**: Parses raw email headers to display authentication results, email journey visualization, hop timeline, important headers (From, To, Subject, Message-ID, etc.), and potential security issues.
 - **Pwned Email Checker**: Integrates with the Have I Been Pwned (HIBP) API v3 to check if an email address has appeared in known data breaches. **Requires HIBP API Key.**
+- **Domain Intelligence (Optional)**: Pluggable OSINT provider integrations to surface domain exposure signals (e.g., stealer logs, credentials, mentions). Requires provider API keys if enabled.
 - **Domain Reputation & Blacklist Check**: Queries numerous DNSBL (IP-based) and RHSBL/SURBL (Domain-based) blacklists.
 - **Responsive Design**: Adapts to various screen sizes (desktop, tablet, mobile) using CSS media queries.
 - **Mobile Enhancements**: Includes touch-friendly interactions, optimized layout, and specific handlers for mobile devices.
@@ -122,6 +123,13 @@ Key goals include:
 - **Features**: Email input, displays breach details (site, date, compromised data types) if found, or confirms if no breaches were found.
 - **Requires**: A valid HIBP API Key set as an environment variable (`HIBP_API_KEY`).
 - **Files**: `templates/pwned_checker.html`, `static/js/pwned_checker.js`, `app.py` (API route).
+
+### Domain Intelligence (Stealer/Leak Signals)
+
+- **Functionality**: Optional domain search that queries configured OSINT providers for potential exposure signals tied to a domain (e.g., stealer logs, credential dumps, mentions/pastes).
+- **Providers (pluggable)**: IntelligenceX, LeakCheck.io (add more by extending `domain_intel.py`).
+- **Requires**: Provider API keys set via environment variables. Without keys, the UI shows providers as "Not configured" and skips them.
+- **Files**: `domain_intel.py` (provider aggregation), `app.py` (`GET /api/domain-intel`), `templates/pwned_checker.html`, `static/js/pwned_checker.js`.
 
 ---
 
@@ -399,6 +407,34 @@ The backend provides several RESTful API endpoints:
     { "status": "not_pwned" }
     ```
 
+### Domain Intel Endpoint
+
+- **Endpoint**: `GET /api/domain-intel`
+- **Query Parameters**:
+  - `domain` (string, required): The domain to search (e.g., `example.com`).
+- **Requires**: Provider API keys for meaningful results (see Configuration). If none are configured, the endpoint still responds successfully with each provider marked as `not_configured`.
+- **Description**: Queries configured OSINT providers concurrently and returns a normalized summary of findings and per-provider details.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "domain": "example.com",
+    "providers": {
+      "intelx": {
+        "provider": "intelx",
+        "configured": true,
+        "status": "ok",
+        "findings_count": 3,
+        "findings": [
+          {"type": "mention", "title": "...", "source": "IntelX", "date": "2024-05-01", "metadata": {...}}
+        ]
+      },
+      "leakcheck": { "configured": false, "status": "not_configured" }
+    },
+    "summary": { "total_findings": 3, "categories": { "mention": 3 } }
+  }
+  ```
+- **Error Response (500)**: Standard error format with `error_code: "DOMAIN_INTEL_ERROR"` if an unexpected exception occurs.
+
 ### Error Response Format
 
 API errors generally follow this format:
@@ -463,6 +499,10 @@ _Common HTTP Status Codes Used_: 200 (OK), 400 (Bad Request), 401 (Unauthorized 
 - **Gunicorn (`gunicorn_config.py`)**: Configures the Gunicorn WSGI server for production. Sets the bind address/port (`0.0.0.0:10000`), number of workers (4), and request timeout (180s).
 - **Environment Variables (`.env` file locally)**:
   - `HIBP_API_KEY` (Required for Pwned Checker): Your API key from Have I Been Pwned.
+  - `INTELX_API_KEY` (Optional): IntelligenceX API key to enable domain intelligence results.
+  - `INTELX_BASE_URL` (Optional): Base URL for IntelX API (defaults to `https://free.intelx.io`).
+  - `LEAKCHECK_API_KEY` (Optional): LeakCheck.io API key to enable domain intelligence results.
+  - `LEAKCHECK_BASE_URL` (Optional): LeakCheck API endpoint (defaults to `https://leakcheck.io/api/public`).
   - `FLASK_ENV` (Optional): Set to `development` for Flask development mode (enables debugger, auto-reload). Defaults to `production`.
   - `PORT` (Optional): Port number for the server to listen on (primarily for deployment platforms like Render). Gunicorn config uses `10000`.
 - **Blacklists (`reputation_check.py`)**: The `BLACKLISTS` list defines the DNSBL and domain-based blacklists used for reputation checks. This list can be updated.
@@ -528,7 +568,7 @@ Access the deployed application via its URL or run it locally (`http://127.0.0.1
 
 ## 🔒 Security Considerations
 
-- **HIBP API Key**: The `HIBP_API_KEY` is sensitive. **DO NOT** commit it directly into the code or `apiKey.txt`. Use environment variables as implemented in `app.py`. Ensure the `.env` file (if used locally) is added to `.gitignore`. Configure this securely in your deployment environment (like Render's environment variables).
+- **API Keys (HIBP, IntelX, LeakCheck)**: All keys are sensitive. **DO NOT** commit them directly into code or keep them in plaintext files like `apiKey.txt`. Use environment variables as implemented in `app.py`. Ensure the `.env` file (if used locally) is added to `.gitignore`. Configure keys securely in your deployment environment (like Render's environment variables). If a key was accidentally committed, rotate it immediately.
 - **Input Validation**: Backend routes include validation for domain names (`is_valid_domain`) and IP addresses (`is_valid_ip`) to prevent basic injection or malformed requests. Further sanitization might be needed depending on usage context.
 - **External API Timeouts**: Timeouts are implemented for external API calls (HIBP, IP Geolocation) to prevent requests from hanging indefinitely.
 - **Client-Side Analysis**: The Email Header Analyzer performs all parsing on the client-side (in the user's browser) to avoid sending potentially sensitive email header data to the server.
